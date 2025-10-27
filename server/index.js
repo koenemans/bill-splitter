@@ -303,6 +303,14 @@ app.get('/api/splits/:id/settlement', (req, res) => {
     balance: data.paid - data.owes
   }));
 
+  // Save original balances before mutation
+  const originalBalances = netBalances.map(b => ({
+    name: b.name,
+    paid: Math.round(b.paid * 100) / 100,
+    owes: Math.round(b.owes * 100) / 100,
+    balance: Math.round(b.balance * 100) / 100
+  }));
+
   // Calculate settlements (who pays whom)
   const debtors = netBalances.filter(p => p.balance < -0.01).sort((a, b) => a.balance - b.balance);
   const creditors = netBalances.filter(p => p.balance > 0.01).sort((a, b) => b.balance - a.balance);
@@ -334,12 +342,7 @@ app.get('/api/splits/:id/settlement', (req, res) => {
       ready: true,
       total: Math.round(total * 100) / 100,
       perPerson: Math.round(perPersonShare * 100) / 100,
-      balances: netBalances.map(b => ({
-        name: b.name,
-        paid: Math.round(b.paid * 100) / 100,
-        owes: Math.round(b.owes * 100) / 100,
-        balance: Math.round(b.balance * 100) / 100
-      })),
+      balances: originalBalances,
       transactions
     });
   } catch (error) {
