@@ -4,9 +4,14 @@ import { nanoid } from 'nanoid';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import xss from 'xss';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 
 // Security: HTTPS redirect in production
 if (process.env.NODE_ENV === 'production') {
@@ -351,6 +356,22 @@ app.get('/api/splits/:id/settlement', (req, res) => {
   }
 });
 
+// Health check endpoint for Docker and deployment platforms
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ status: 'healthy', timestamp: new Date().toISOString() });
+});
+
+// Serve static files in production
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, 'public')));
+  
+  // Catch all handler: send back React's index.html file for client-side routing
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  });
+}
+
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
 });

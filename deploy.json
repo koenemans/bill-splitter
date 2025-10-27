@@ -1,0 +1,27 @@
+{
+  "scripts": {
+    "prebuild": "npm run install:all",
+    "build": "npm run client:build",
+    "start": "cd server && npm start"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "deployment": {
+    "azure": {
+      "appServicePlan": "Standard",
+      "nodeVersion": "18-lts",
+      "buildCommand": "npm run build",
+      "startCommand": "npm start"
+    },
+    "heroku": {
+      "buildpacks": ["heroku/nodejs"],
+      "scripts": {
+        "heroku-prebuild": "npm run install:all",
+        "build": "npm run client:build",
+        "start": "npm start"
+      }
+    }
+  }
+}
