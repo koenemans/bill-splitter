@@ -15,11 +15,33 @@ function Split() {
 
   const shareUrl = `${window.location.origin}/split/${id}`
 
+  // Load split data and restore participant from localStorage
   useEffect(() => {
     loadSplit()
     const interval = setInterval(loadSplit, 2000) // Poll every 2 seconds
     return () => clearInterval(interval)
   }, [id])
+
+  // Restore currentParticipant from localStorage when split data is loaded
+  useEffect(() => {
+    if (split && !currentParticipant) {
+      const storageKey = `bill-splitter-participant-${id}`
+      const savedParticipantId = localStorage.getItem(storageKey)
+      
+      if (savedParticipantId) {
+        // Find the participant in the current split data
+        const participant = split.participants.find(p => p.id === savedParticipantId)
+        
+        if (participant && !participant.isDone) {
+          // Restore the participant if they exist and haven't marked themselves as done
+          setCurrentParticipant(participant)
+        } else if (!participant || participant.isDone) {
+          // Clear localStorage if participant doesn't exist or is done
+          localStorage.removeItem(storageKey)
+        }
+      }
+    }
+  }, [split, id])
 
   useEffect(() => {
     if (split && split.participants.every(p => p.isDone)) {
@@ -68,6 +90,9 @@ function Split() {
       if (response.ok) {
         const participant = await response.json()
         setCurrentParticipant(participant)
+        // Save participant ID to localStorage
+        const storageKey = `bill-splitter-participant-${id}`
+        localStorage.setItem(storageKey, participant.id)
         setName('')
         loadSplit()
       }
@@ -121,6 +146,9 @@ function Split() {
         method: 'PATCH'
       })
       if (response.ok) {
+        // Clear localStorage when user marks themselves as done
+        const storageKey = `bill-splitter-participant-${id}`
+        localStorage.removeItem(storageKey)
         setCurrentParticipant(null)
         loadSplit()
       }
@@ -137,6 +165,9 @@ function Split() {
       if (response.ok) {
         const participant = await response.json()
         setCurrentParticipant(participant)
+        // Save participant ID to localStorage when resetting
+        const storageKey = `bill-splitter-participant-${id}`
+        localStorage.setItem(storageKey, participant.id)
         loadSplit()
       }
     } catch (error) {
