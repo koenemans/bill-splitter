@@ -118,6 +118,22 @@ app.patch('/api/splits/:id/participants/:participantId/done', (req, res) => {
   res.json(participant);
 });
 
+// Reset participant done status
+app.patch('/api/splits/:id/participants/:participantId/reset', (req, res) => {
+  const split = splits.get(req.params.id);
+  if (!split) {
+    return res.status(404).json({ error: 'Split not found' });
+  }
+  
+  const participant = split.participants.find(p => p.id === req.params.participantId);
+  if (!participant) {
+    return res.status(404).json({ error: 'Participant not found' });
+  }
+  
+  participant.isDone = false;
+  res.json(participant);
+});
+
 // Calculate settlement
 app.get('/api/splits/:id/settlement', (req, res) => {
   const split = splits.get(req.params.id);

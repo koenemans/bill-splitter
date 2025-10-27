@@ -129,6 +129,21 @@ function Split() {
     }
   }
 
+  const resetDone = async (participantId) => {
+    try {
+      const response = await fetch(`/api/splits/${id}/participants/${participantId}/reset`, {
+        method: 'PATCH'
+      })
+      if (response.ok) {
+        const participant = await response.json()
+        setCurrentParticipant(participant)
+        loadSplit()
+      }
+    } catch (error) {
+      console.error('Error resetting done status:', error)
+    }
+  }
+
   const copyLink = () => {
     navigator.clipboard.writeText(shareUrl)
     alert('Link copied to clipboard!')
@@ -252,6 +267,14 @@ function Split() {
                   <div className="text-xs text-gray-600">
                     {p.isDone ? '✓ Done' : 'Adding expenses...'}
                   </div>
+                  {p.isDone && (
+                    <button
+                      onClick={() => resetDone(p.id)}
+                      className="mt-2 w-full text-xs px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                    >
+                      Reset
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
