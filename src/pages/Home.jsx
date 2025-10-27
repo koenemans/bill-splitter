@@ -12,11 +12,16 @@ function Home() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
       })
-      const data = await response.json()
-      navigate(`/split/${data.id}`)
+      if (response.ok) {
+        const data = await response.json()
+        navigate(`/split/${data.id}`)
+      } else {
+        const error = await response.json()
+        alert(error.error || 'Failed to create split. Please try again.')
+      }
     } catch (error) {
       console.error('Error creating split:', error)
-      alert('Failed to create split. Please try again.')
+      alert('Failed to create split. Please check your connection and try again.')
     } finally {
       setLoading(false)
     }

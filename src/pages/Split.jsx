@@ -18,7 +18,8 @@ function Split() {
   // Load split data and restore participant from localStorage
   useEffect(() => {
     loadSplit()
-    const interval = setInterval(loadSplit, 2000) // Poll every 2 seconds
+    // Security: Reduced polling frequency to minimize server load
+    const interval = setInterval(loadSplit, 5000) // Poll every 5 seconds
     return () => clearInterval(interval)
   }, [id])
 
@@ -55,6 +56,10 @@ function Split() {
       if (response.ok) {
         const data = await response.json()
         setSplit(data)
+      } else if (response.status === 404) {
+        setSplit(null)
+      } else {
+        console.error('Failed to load split')
       }
     } catch (error) {
       console.error('Error loading split:', error)
@@ -95,9 +100,13 @@ function Split() {
         localStorage.setItem(storageKey, participant.id)
         setName('')
         loadSplit()
+      } else {
+        const error = await response.json()
+        alert(error.error || 'Failed to add participant')
       }
     } catch (error) {
       console.error('Error adding participant:', error)
+      alert('Failed to add participant. Please try again.')
     }
   }
 
@@ -119,9 +128,13 @@ function Split() {
         setDescription('')
         setAmount('')
         loadSplit()
+      } else {
+        const error = await response.json()
+        alert(error.error || 'Failed to add expense')
       }
     } catch (error) {
       console.error('Error adding expense:', error)
+      alert('Failed to add expense. Please try again.')
     }
   }
 
@@ -132,9 +145,12 @@ function Split() {
       })
       if (response.ok) {
         loadSplit()
+      } else {
+        alert('Failed to delete expense')
       }
     } catch (error) {
       console.error('Error deleting expense:', error)
+      alert('Failed to delete expense. Please try again.')
     }
   }
 
@@ -151,9 +167,12 @@ function Split() {
         localStorage.removeItem(storageKey)
         setCurrentParticipant(null)
         loadSplit()
+      } else {
+        alert('Failed to mark as done')
       }
     } catch (error) {
       console.error('Error marking done:', error)
+      alert('Failed to mark as done. Please try again.')
     }
   }
 
@@ -169,9 +188,12 @@ function Split() {
         const storageKey = `bill-splitter-participant-${id}`
         localStorage.setItem(storageKey, participant.id)
         loadSplit()
+      } else {
+        alert('Failed to reset participant')
       }
     } catch (error) {
       console.error('Error resetting done status:', error)
+      alert('Failed to reset participant. Please try again.')
     }
   }
 
