@@ -47,7 +47,7 @@ const MAX_EXPENSES = 500;
 const MAX_NAME_LENGTH = 100;
 const MAX_DESCRIPTION_LENGTH = 200;
 const MAX_AMOUNT = 1000000;
-const SPLIT_EXPIRY_MS = 24 * 60 * 60 * 1000; // 24 hours
+const SPLIT_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 // Security: Clean up old splits every hour
 setInterval(() => {
