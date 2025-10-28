@@ -24,6 +24,9 @@ COPY server/ ./server/
 WORKDIR /app/server
 RUN npm install --only=production
 
+# Install PM2 globally for process management
+RUN npm install -g pm2
+
 # Copy built client files to server's static directory
 COPY --from=builder /app/client/dist ./public
 
