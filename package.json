@@ -8,7 +8,7 @@
     "client:dev": "cd client && npm run dev",
     "server:start": "cd server && npm start",
     "client:build": "cd client && npm run build",
-    "build": "echo 'Client already built in CI pipeline'",
+    "build": "npm run client:build",
     "start": "cd server && npm start",
     "install:all": "npm install && cd server && npm install && cd ../client && npm install",
     "test": "cd server && npm test && cd ../client && npm test",
