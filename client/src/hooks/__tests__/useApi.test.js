@@ -117,6 +117,69 @@ describe('useApi Hook', () => {
     expect(result.current.error).toBe(null);
   });
 
+  test('should handle 204 No Content response', async () => {
+    fetch.mockResolvedValueOnce({
+      ok: true,
+      status: 204,
+      headers: {
+        get: jest.fn().mockReturnValue(null),
+      },
+    });
+
+    const { result } = renderHook(() => useApi());
+
+    let apiResult;
+    await act(async () => {
+      apiResult = await result.current.apiCall('/test-endpoint');
+    });
+
+    expect(apiResult).toBe(null);
+    expect(result.current.loading).toBe(false);
+    expect(result.current.error).toBe(null);
+  });
+
+  test('should handle empty response with content-length 0', async () => {
+    fetch.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      headers: {
+        get: jest.fn().mockReturnValue('0'),
+      },
+    });
+
+    const { result } = renderHook(() => useApi());
+
+    let apiResult;
+    await act(async () => {
+      apiResult = await result.current.apiCall('/test-endpoint');
+    });
+
+    expect(apiResult).toBe(null);
+    expect(result.current.loading).toBe(false);
+    expect(result.current.error).toBe(null);
+  });
+
+  test('should handle error response without JSON body', async () => {
+    fetch.mockResolvedValueOnce({
+      ok: false,
+      status: 500,
+      json: jest.fn().mockRejectedValue(new Error('Invalid JSON')),
+    });
+
+    const { result } = renderHook(() => useApi());
+
+    await act(async () => {
+      try {
+        await result.current.apiCall('/test-endpoint');
+      } catch (error) {
+        expect(error.message).toBe('HTTP error! status: 500');
+      }
+    });
+
+    expect(result.current.loading).toBe(false);
+    expect(result.current.error).toBe('HTTP error! status: 500');
+  });
+
   test('should set loading state during API call', async () => {
     let resolvePromise;
     const promise = new Promise(resolve => {
@@ -289,13 +352,17 @@ describe('useSplitApi Hook', () => {
   test('should delete expense', async () => {
     fetch.mockResolvedValueOnce({
       ok: true,
-      json: async () => ({}),
+      status: 204,
+      headers: {
+        get: jest.fn().mockReturnValue(null),
+      },
     });
 
     const { result } = renderHook(() => useSplitApi());
 
+    let deleteResult;
     await act(async () => {
-      await result.current.deleteExpense('split-id', 'expense-id');
+      deleteResult = await result.current.deleteExpense('split-id', 'expense-id');
     });
 
     expect(fetch).toHaveBeenCalledWith(
@@ -307,6 +374,7 @@ describe('useSplitApi Hook', () => {
         },
       }
     );
+    expect(deleteResult).toBe(null);
   });
 
   test('should mark participant done', async () => {

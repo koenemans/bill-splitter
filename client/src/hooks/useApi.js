@@ -19,10 +19,19 @@ export const useApi = () => {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(
-          errorData.error || `HTTP error! status: ${response.status}`
-        );
+        let errorMessage = `HTTP error! status: ${response.status}`;
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch {
+          // If response body is not JSON, use the default error message
+        }
+        throw new Error(errorMessage);
+      }
+
+      // Skip JSON parsing for 204 No Content or empty responses
+      if (response.status === 204 || response.headers?.get('content-length') === '0') {
+        return null;
       }
 
       const data = await response.json();
