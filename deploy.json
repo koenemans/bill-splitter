@@ -22,7 +22,9 @@
       "nodeVersion": "18-lts",
       "buildCommand": "npm run build",
       "startCommand": "npm start",
-      "dockerSupport": true
+      "processManager": "pm2",
+      "dockerSupport": true,
+      "features": ["auto-restart", "process-monitoring", "log-management"]
     }
   }
 }
