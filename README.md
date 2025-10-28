@@ -63,15 +63,12 @@ npm run lint         # Run linting
 npm run format       # Format code
 ```
 
-### PM2 Process Management (Server)
+### Server Commands
 
 ```bash
 cd server
-npm run start:pm2    # Start server with PM2
-npm run stop:pm2     # Stop PM2 process
-npm run restart:pm2  # Restart PM2 process
-pm2 logs bill-splitter  # View logs
-pm2 monit            # Monitor processes
+npm start            # Start server in production
+npm run dev          # Start server in development mode
 ```
 
 ## 🐳 Docker Deployment
@@ -106,10 +103,10 @@ services:
 
 For Azure App Service on Linux:
 - Use the Dockerfile for container deployment
-- Set startup command to: `npm start` (uses PM2 for process management)
+- Set startup command to: `npm start` (uses native Node.js process)
 - The `web.config` file is not needed for Linux App Service
 
-**Process Management**: The application now uses PM2 for enhanced process management, automatic restarts, and better logging in production environments.
+**Process Management**: The application uses native Node.js processes. Azure App Service provides automatic restarts and process management.
 
 ## 🤝 Contributing
 

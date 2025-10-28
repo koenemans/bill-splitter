@@ -68,9 +68,6 @@ jobs:
           npm ci --only=production
           cd server && npm ci --only=production
       
-      - name: Install PM2 globally
-        run: npm install -g pm2
-      
       - name: Login to Azure
         uses: azure/login@v2
         with:
