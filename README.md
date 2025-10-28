@@ -45,8 +45,9 @@ The app will run on:
 bill-splitter/
 ├── client/                 # React frontend
 ├── server/                 # Express.js backend
-├── Dockerfile             # Container configuration
-├── web.config            # Azure Web Apps configuration
+├── Dockerfile             # Docker container configuration
+├── deploy.json           # Deployment configuration
+├── web.config            # Azure Windows App Service (optional)
 └── package.json          # Monorepo orchestrator
 ```
 
@@ -61,6 +62,41 @@ npm test             # Run tests
 npm run lint         # Run linting
 npm run format       # Format code
 ```
+
+## 🐳 Docker Deployment
+
+### Quick Docker Setup
+
+```bash
+# Build the Docker image
+docker build -t bill-splitter .
+
+# Run the container
+docker run -p 3001:3001 bill-splitter
+```
+
+The application will be available at http://localhost:3001
+
+### Docker Compose (Optional)
+
+```yaml
+version: '3.8'
+services:
+  bill-splitter:
+    build: .
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+```
+
+### Azure App Service Deployment
+
+For Azure App Service on Linux:
+- Use the Dockerfile for container deployment
+- Set startup command to: `npm start`
+- The `web.config` file is not needed for Linux App Service
 
 ## 🤝 Contributing
 
