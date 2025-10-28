@@ -34,11 +34,16 @@ const config = {
   },
   rateLimit: {
     windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutes
-    max: parseInt(process.env.RATE_LIMIT_MAX_PER_IP) || 20, // Reduced from 100 to 20 requests per window per IP
+    read: {
+      max: parseInt(process.env.RATE_LIMIT_READ_MAX_PER_IP) || 200, // More generous for GET requests (polling)
+    },
+    write: {
+      max: parseInt(process.env.RATE_LIMIT_WRITE_MAX_PER_IP) || 50, // Stricter for POST/PATCH/DELETE
+    },
   },
   globalRateLimit: {
     windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutes
-    max: parseInt(process.env.GLOBAL_RATE_LIMIT_MAX) || 500, // Global limit across all IPs
+    max: parseInt(process.env.GLOBAL_RATE_LIMIT_MAX) || 2000, // Increased global limit
   },
   splitExpiryMs: parseInt(process.env.SPLIT_EXPIRY_MS) || 24 * 60 * 60 * 1000, // Reduced from 7 days to 24 hours
   memoryMonitoring: {
@@ -89,13 +94,38 @@ const splits = new Map();
 let globalRequestCount = 0;
 let globalWindowStart = Date.now();
 
-// Security: Per-IP Rate limiting
-const limiter = rateLimit({
+// Security: Tiered Rate limiting - separate limits for read vs write operations
+const readLimiter = rateLimit({
   windowMs: config.rateLimit.windowMs,
-  max: config.rateLimit.max,
-  message: 'Too many requests from this IP, please try again later.',
+  max: config.rateLimit.read.max,
+  message: 'Too many read requests from this IP, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
 });
-app.use('/api/', limiter);
+
+const writeLimiter = rateLimit({
+  windowMs: config.rateLimit.windowMs,
+  max: config.rateLimit.write.max,
+  message: 'Too many write requests from this IP, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Apply read limiter to GET requests
+app.use('/api/', (req, res, next) => {
+  if (req.method === 'GET') {
+    return readLimiter(req, res, next);
+  }
+  next();
+});
+
+// Apply write limiter to POST/PATCH/DELETE requests
+app.use('/api/', (req, res, next) => {
+  if (['POST', 'PATCH', 'DELETE', 'PUT'].includes(req.method)) {
+    return writeLimiter(req, res, next);
+  }
+  next();
+});
 
 // Security: Global rate limiting across all IPs
 const globalRateLimiter = (req, res, next) => {
