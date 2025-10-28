@@ -22,12 +22,13 @@ const createTestApp = () => {
       maxDescriptionLength: 200,
       maxAmount: 1000000,
       requestBodySize: '10kb',
+      maxTotalSplits: 10000, // Global limit for all active splits
     },
     rateLimit: {
       windowMs: 15 * 60 * 1000,
-      max: 100,
+      max: 20, // Reduced from 100 to match production
     },
-    splitExpiryMs: 7 * 24 * 60 * 60 * 1000,
+    splitExpiryMs: 24 * 60 * 60 * 1000, // Reduced from 7 days to 24 hours
   };
 
   // In-memory storage for tests

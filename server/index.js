@@ -23,12 +23,21 @@ const config = {
     maxDescriptionLength: 200,
     maxAmount: 1000000,
     requestBodySize: '10kb',
+    maxTotalSplits: parseInt(process.env.MAX_TOTAL_SPLITS) || 10000, // Global limit for all active splits
   },
   rateLimit: {
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // requests per window
+    windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutes
+    max: parseInt(process.env.RATE_LIMIT_MAX_PER_IP) || 20, // Reduced from 100 to 20 requests per window per IP
   },
-  splitExpiryMs: 7 * 24 * 60 * 60 * 1000, // 7 days
+  globalRateLimit: {
+    windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutes
+    max: parseInt(process.env.GLOBAL_RATE_LIMIT_MAX) || 500, // Global limit across all IPs
+  },
+  splitExpiryMs: parseInt(process.env.SPLIT_EXPIRY_MS) || 24 * 60 * 60 * 1000, // Reduced from 7 days to 24 hours
+  memoryMonitoring: {
+    alertThresholdMB: parseInt(process.env.MEMORY_ALERT_THRESHOLD_MB) || 1000, // Alert when memory usage exceeds 1GB
+    checkIntervalMs: 5 * 60 * 1000, // Check every 5 minutes
+  },
 };
 
 const isProduction = () => config.nodeEnv === 'production';
@@ -62,7 +71,14 @@ app.use(
 // Body parsers
 app.use(express.json({ limit: config.limits.requestBodySize }));
 
-// Security: Rate limiting
+// In-memory storage
+const splits = new Map();
+
+// Global request counter for rate limiting
+let globalRequestCount = 0;
+let globalWindowStart = Date.now();
+
+// Security: Per-IP Rate limiting
 const limiter = rateLimit({
   windowMs: config.rateLimit.windowMs,
   max: config.rateLimit.max,
@@ -70,8 +86,50 @@ const limiter = rateLimit({
 });
 app.use('/api/', limiter);
 
-// In-memory storage
-const splits = new Map();
+// Security: Global rate limiting across all IPs
+const globalRateLimiter = (req, res, next) => {
+  const now = Date.now();
+
+  // Reset window if expired
+  if (now - globalWindowStart > config.globalRateLimit.windowMs) {
+    globalRequestCount = 0;
+    globalWindowStart = now;
+  }
+
+  // Check global limit
+  if (globalRequestCount >= config.globalRateLimit.max) {
+    return res.status(429).json({
+      error: 'Global rate limit exceeded. Server is temporarily overloaded.',
+    });
+  }
+
+  globalRequestCount++;
+  next();
+};
+app.use('/api/', globalRateLimiter);
+
+// Memory monitoring
+let lastMemoryCheck = Date.now();
+const checkMemoryUsage = () => {
+  const memUsage = process.memoryUsage();
+  const memUsageMB = Math.round(memUsage.heapUsed / 1024 / 1024);
+
+  if (memUsageMB > config.memoryMonitoring.alertThresholdMB) {
+    console.warn(
+      `⚠️  HIGH MEMORY USAGE: ${memUsageMB}MB (threshold: ${config.memoryMonitoring.alertThresholdMB}MB)`
+    );
+    console.warn(`   Active splits: ${splits.size}`);
+  }
+
+  if (Date.now() - lastMemoryCheck > 60000) {
+    // Log every minute
+    console.log(`📊 Memory: ${memUsageMB}MB, Active splits: ${splits.size}`);
+    lastMemoryCheck = Date.now();
+  }
+};
+
+// Start memory monitoring
+setInterval(checkMemoryUsage, config.memoryMonitoring.checkIntervalMs);
 
 // Validation middleware
 const handleValidationErrors = (req, res, next) => {
@@ -111,6 +169,13 @@ setInterval(
 apiRouter.post(
   '/splits',
   asyncHandler((req, res) => {
+    // Security: Check global split limit to prevent memory exhaustion
+    if (splits.size >= config.limits.maxTotalSplits) {
+      return res.status(429).json({
+        error: `Maximum number of active splits reached (${config.limits.maxTotalSplits}). Please try again later.`,
+      });
+    }
+
     // Security: Use longer nanoid for better security
     const id = nanoid(12);
     const split = {
@@ -120,6 +185,10 @@ apiRouter.post(
       expenses: [],
     };
     splits.set(id, split);
+
+    // Check memory usage after creating split
+    checkMemoryUsage();
+
     res.status(201).json({ id });
   })
 );
