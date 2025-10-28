@@ -111,6 +111,28 @@ For Azure App Service on Linux:
 
 **Process Management**: The application uses native Node.js processes. Azure App Service provides automatic restarts and process management.
 
+### Application Insights Setup
+
+After your app deploys to Azure, follow these steps to enable logging and monitoring:
+
+1. **Create Application Insights** in Azure Portal
+   - Search "Application Insights" → Create
+   - Same resource group and region as your web app
+
+2. **Get the connection string** from the Application Insights Overview page
+
+3. **Add to your Web App settings**:
+   - Go to Web App → Configuration → Application settings
+   - Add: `APPLICATIONINSIGHTS_CONNECTION_STRING` = your connection string
+   - Add: `VITE_APPLICATIONINSIGHTS_CONNECTION_STRING` = same connection string
+   - Save and restart the web app
+
+4. **Test it works**:
+   - Use your app for a few minutes
+   - Check Application Insights → Live Metrics for activity
+
+Your app will automatically track API requests, errors, user actions, and business events.
+
 ## 🤝 Contributing
 
 Please refer to our [Development Guide](../../wiki/Development-Guide) and [Coding Standards](../../wiki/Coding-Standards) in the wiki for detailed information on contributing to this project.

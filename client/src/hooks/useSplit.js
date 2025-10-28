@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useSplitApi } from './useApi';
+import { logger } from '../utils/logger';
 
 // Custom hook for split data management with polling following React rules
 export const useSplit = splitId => {
@@ -24,7 +25,7 @@ export const useSplit = splitId => {
       ) {
         setSplit(null);
       }
-      console.error('Error loading split:', err);
+      logger.apiError('load_split', err, { splitId });
     } finally {
       setLoading(false);
     }
@@ -42,7 +43,7 @@ export const useSplit = splitId => {
         setSettlement(data);
       }
     } catch (err) {
-      console.error('Error loading settlement:', err);
+      logger.apiError('load_settlement', err, { splitId });
     }
   }, [splitId, getSettlement]);
 
