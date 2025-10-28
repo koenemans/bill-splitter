@@ -9,6 +9,7 @@ export const useSplit = splitId => {
   const [loading, setLoading] = useState(true);
   const [pollingInterval, setPollingInterval] = useState(10000); // Start with 10 seconds
   const consecutiveErrorsRef = useRef(0);
+  const skipImmediateCallRef = useRef(false); // Track if we should skip immediate call due to backoff
   const { getSplit, getSettlement, error } = useSplitApi();
 
   // Load split data with exponential backoff on rate limit errors
@@ -23,7 +24,10 @@ export const useSplit = splitId => {
 
       // Reset error count and polling interval on successful request
       consecutiveErrorsRef.current = 0;
-      setPollingInterval(10000); // Reset to 10 seconds
+      if (pollingInterval !== 10000) {
+        skipImmediateCallRef.current = true; // Skip immediate call when resetting interval
+        setPollingInterval(10000); // Reset to 10 seconds
+      }
     } catch (err) {
       if (
         err.message.includes('404') ||
@@ -40,6 +44,9 @@ export const useSplit = splitId => {
           10000 * Math.pow(2, consecutiveErrorsRef.current),
           60000
         ); // Max 1 minute
+
+        // Skip immediate call when interval changes due to rate limit
+        skipImmediateCallRef.current = true;
         setPollingInterval(backoffInterval);
 
         logger.apiError('load_split_rate_limited', err, {
@@ -90,7 +97,13 @@ export const useSplit = splitId => {
       return;
     }
 
-    loadSplit();
+    // Only call loadSplit immediately if we're not skipping due to backoff
+    if (!skipImmediateCallRef.current) {
+      loadSplit();
+    } else {
+      // Reset the skip flag after using it
+      skipImmediateCallRef.current = false;
+    }
 
     // Adaptive polling with exponential backoff on errors
     const interval = setInterval(loadSplit, pollingInterval);
