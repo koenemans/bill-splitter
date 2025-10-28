@@ -13,6 +13,7 @@ npm run dev
 ```
 
 The app will run on:
+
 - **Frontend**: http://localhost:5173
 - **Backend API**: http://localhost:3001
 
@@ -31,6 +32,7 @@ The app will run on:
 **All detailed documentation has been moved to the [GitHub Wiki](../../wiki).**
 
 ### Quick Links
+
 - **[Getting Started](../../wiki/Getting-Started)** - Installation and setup
 - **[Development Guide](../../wiki/Development-Guide)** - Development workflow and standards
 - **[Testing Documentation](../../wiki/Testing-Documentation)** - Test suite and coverage
@@ -93,7 +95,7 @@ services:
   bill-splitter:
     build: .
     ports:
-      - "3001:3001"
+      - '3001:3001'
     environment:
       - NODE_ENV=production
     restart: unless-stopped
@@ -102,6 +104,7 @@ services:
 ### Azure App Service Deployment
 
 For Azure App Service on Linux:
+
 - Use the Dockerfile for container deployment
 - Set startup command to: `npm start` (uses native Node.js process)
 - The `web.config` file is not needed for Linux App Service
