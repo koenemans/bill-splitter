@@ -34,9 +34,10 @@ jobs:
           npm run build --if-present
           npm run test --if-present
 
-      - name: Copy built client files to root
+      - name: Copy built client files to server/public
         run: |
-          cp -r client/dist/* .
+          mkdir -p server/public
+          cp -r client/dist/* server/public/
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
