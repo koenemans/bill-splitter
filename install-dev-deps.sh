@@ -17,7 +17,6 @@ npm install --save-dev \
   eslint-config-prettier \
   @eslint/js \
   prettier \
-  typescript \
   jest-transform-stub \
   identity-obj-proxy
 
