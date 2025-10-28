@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSplitApi } from '../hooks/useApi';
+import { logger } from '../utils/logger';
 
 const Home = memo(() => {
   const navigate = useNavigate();
@@ -9,10 +10,12 @@ const Home = memo(() => {
   const handleCreateSplit = async () => {
     try {
       clearError();
+      logger.userAction('create_split', 'button');
       const data = await createSplit();
+      logger.splitCreated(data.id);
       navigate(`/split/${data.id}`);
     } catch (err) {
-      console.error('Error creating split:', err);
+      logger.apiError('create_split', err);
       alert(err.message || 'Failed to create split. Please try again.');
     }
   };

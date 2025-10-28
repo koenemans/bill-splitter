@@ -9,13 +9,14 @@
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watch",
     "test:coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage",
-    "lint": "eslint src/ --ext .js,.jsx,.ts,.tsx",
-    "lint:fix": "eslint src/ --ext .js,.jsx,.ts,.tsx --fix",
+    "lint": "eslint src/ --ext .js,.jsx",
+    "lint:fix": "eslint src/ --ext .js,.jsx --fix",
     "format": "prettier --write src/",
-    "format:check": "prettier --check src/",
-    "type-check": "tsc --noEmit"
+    "format:check": "prettier --check src/"
   },
   "dependencies": {
+    "@microsoft/applicationinsights-web": "^3.0.5",
+    "@microsoft/applicationinsights-react-js": "^17.0.1",
     "prop-types": "^15.8.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

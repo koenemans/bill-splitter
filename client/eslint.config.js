@@ -30,6 +30,7 @@ export default [
         clearTimeout: 'readonly',
         global: 'readonly',
         jest: 'readonly',
+        PerformanceObserver: 'readonly',
       },
     },
     plugins: {
@@ -54,7 +55,7 @@ export default [
       // General code quality rules
       'no-console': 'warn',
       'no-debugger': 'error',
-      'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      'no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
       'no-var': 'error',
       'prefer-const': 'error',
       'eqeqeq': ['error', 'always'],

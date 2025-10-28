@@ -7,6 +7,13 @@ import xss from 'xss';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { body, param, validationResult } from 'express-validator';
+import {
+  correlationMiddleware,
+  createContextualLogger,
+  errorLoggingMiddleware,
+  logSystemMetrics,
+  requestLoggingMiddleware,
+} from './utils/logger.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -71,6 +78,10 @@ app.use(
 // Body parsers
 app.use(express.json({ limit: config.limits.requestBodySize }));
 
+// Logging middleware
+app.use(correlationMiddleware);
+app.use(requestLoggingMiddleware);
+
 // In-memory storage
 const splits = new Map();
 
@@ -110,20 +121,27 @@ app.use('/api/', globalRateLimiter);
 
 // Memory monitoring
 let lastMemoryCheck = Date.now();
+const systemLogger = createContextualLogger({ component: 'system' });
+
 const checkMemoryUsage = () => {
   const memUsage = process.memoryUsage();
   const memUsageMB = Math.round(memUsage.heapUsed / 1024 / 1024);
 
   if (memUsageMB > config.memoryMonitoring.alertThresholdMB) {
-    console.warn(
-      `⚠️  HIGH MEMORY USAGE: ${memUsageMB}MB (threshold: ${config.memoryMonitoring.alertThresholdMB}MB)`
+    systemLogger.memoryAlert(
+      memUsageMB,
+      config.memoryMonitoring.alertThresholdMB,
+      splits.size
     );
-    console.warn(`   Active splits: ${splits.size}`);
   }
 
   if (Date.now() - lastMemoryCheck > 60000) {
     // Log every minute
-    console.log(`📊 Memory: ${memUsageMB}MB, Active splits: ${splits.size}`);
+    systemLogger.info('System metrics', {
+      memoryUsageMB: memUsageMB,
+      activeSplits: splits.size,
+      event: 'periodic_metrics',
+    });
     lastMemoryCheck = Date.now();
   }
 };
@@ -152,12 +170,26 @@ const asyncHandler = fn => (req, res, next) => {
 setInterval(
   () => {
     const now = new Date();
+    let deletedCount = 0;
     for (const [id, split] of splits.entries()) {
       const age = now - new Date(split.createdAt);
       if (age > config.splitExpiryMs) {
         splits.delete(id);
-        console.log(`Deleted expired split: ${id}`);
+        systemLogger.info('Split expired and deleted', {
+          splitId: id,
+          age: Math.round(age / 1000 / 60), // age in minutes
+          event: 'split_cleanup',
+        });
+        deletedCount++;
       }
+    }
+
+    if (deletedCount > 0) {
+      systemLogger.info('Cleanup completed', {
+        deletedSplits: deletedCount,
+        remainingSplits: splits.size,
+        event: 'cleanup_summary',
+      });
     }
   },
   60 * 60 * 1000
@@ -171,6 +203,11 @@ apiRouter.post(
   asyncHandler((req, res) => {
     // Security: Check global split limit to prevent memory exhaustion
     if (splits.size >= config.limits.maxTotalSplits) {
+      req.logger.warn('Split creation rejected - limit reached', {
+        currentSplits: splits.size,
+        maxSplits: config.limits.maxTotalSplits,
+        event: 'split_limit_reached',
+      });
       return res.status(429).json({
         error: `Maximum number of active splits reached (${config.limits.maxTotalSplits}). Please try again later.`,
       });
@@ -185,6 +222,11 @@ apiRouter.post(
       expenses: [],
     };
     splits.set(id, split);
+
+    // Log split creation
+    req.logger.splitCreated(id, {
+      totalActiveSplits: splits.size,
+    });
 
     // Check memory usage after creating split
     checkMemoryUsage();
@@ -243,6 +285,13 @@ apiRouter.post(
     };
 
     split.participants.push(participant);
+
+    // Log participant addition
+    req.logger.participantAdded(req.params.id, name, {
+      participantId,
+      totalParticipants: split.participants.length,
+    });
+
     res.status(201).json(participant);
   })
 );
@@ -294,6 +343,15 @@ apiRouter.post(
     };
 
     split.expenses.push(expense);
+
+    // Log expense addition
+    req.logger.expenseAdded(req.params.id, amount, description, {
+      expenseId,
+      participantId,
+      participantName: participant.name,
+      totalExpenses: split.expenses.length,
+    });
+
     res.status(201).json(expense);
   })
 );
@@ -491,9 +549,8 @@ apiRouter.get('/health', (req, res) => {
 app.use('/api', apiRouter);
 
 // Centralized error handler middleware (must be last)
+app.use(errorLoggingMiddleware);
 app.use((error, req, res, _next) => {
-  console.error('Server error:', error);
-
   // Don't expose internal error details in production
   const message = isProduction() ? 'Internal server error' : error.message;
 
@@ -514,6 +571,15 @@ if (isProduction()) {
 }
 
 app.listen(config.port, () => {
-  console.log(`Server running on http://localhost:${config.port}`);
-  console.log(`Environment: ${config.nodeEnv}`);
+  const startupLogger = createContextualLogger({ component: 'startup' });
+
+  startupLogger.info('Server started successfully', {
+    port: config.port,
+    environment: config.nodeEnv,
+    url: `http://localhost:${config.port}`,
+    event: 'server_start',
+  });
+
+  // Log system metrics on startup
+  logSystemMetrics();
 });
