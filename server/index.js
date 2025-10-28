@@ -8,12 +8,11 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { body, param, validationResult } from 'express-validator';
 import {
-  logger,
-  createContextualLogger,
   correlationMiddleware,
-  requestLoggingMiddleware,
+  createContextualLogger,
   errorLoggingMiddleware,
-  logSystemMetrics
+  logSystemMetrics,
+  requestLoggingMiddleware,
 } from './utils/logger.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -139,9 +138,9 @@ const checkMemoryUsage = () => {
   if (Date.now() - lastMemoryCheck > 60000) {
     // Log every minute
     systemLogger.info('System metrics', {
-      memoryUsageMB,
+      memoryUsageMB: memUsageMB,
       activeSplits: splits.size,
-      event: 'periodic_metrics'
+      event: 'periodic_metrics',
     });
     lastMemoryCheck = Date.now();
   }
@@ -179,17 +178,17 @@ setInterval(
         systemLogger.info('Split expired and deleted', {
           splitId: id,
           age: Math.round(age / 1000 / 60), // age in minutes
-          event: 'split_cleanup'
+          event: 'split_cleanup',
         });
         deletedCount++;
       }
     }
-    
+
     if (deletedCount > 0) {
       systemLogger.info('Cleanup completed', {
         deletedSplits: deletedCount,
         remainingSplits: splits.size,
-        event: 'cleanup_summary'
+        event: 'cleanup_summary',
       });
     }
   },
@@ -207,7 +206,7 @@ apiRouter.post(
       req.logger.warn('Split creation rejected - limit reached', {
         currentSplits: splits.size,
         maxSplits: config.limits.maxTotalSplits,
-        event: 'split_limit_reached'
+        event: 'split_limit_reached',
       });
       return res.status(429).json({
         error: `Maximum number of active splits reached (${config.limits.maxTotalSplits}). Please try again later.`,
@@ -226,7 +225,7 @@ apiRouter.post(
 
     // Log split creation
     req.logger.splitCreated(id, {
-      totalActiveSplits: splits.size
+      totalActiveSplits: splits.size,
     });
 
     // Check memory usage after creating split
@@ -286,13 +285,13 @@ apiRouter.post(
     };
 
     split.participants.push(participant);
-    
+
     // Log participant addition
     req.logger.participantAdded(req.params.id, name, {
       participantId,
-      totalParticipants: split.participants.length
+      totalParticipants: split.participants.length,
     });
-    
+
     res.status(201).json(participant);
   })
 );
@@ -344,15 +343,15 @@ apiRouter.post(
     };
 
     split.expenses.push(expense);
-    
+
     // Log expense addition
     req.logger.expenseAdded(req.params.id, amount, description, {
       expenseId,
       participantId,
       participantName: participant.name,
-      totalExpenses: split.expenses.length
+      totalExpenses: split.expenses.length,
     });
-    
+
     res.status(201).json(expense);
   })
 );
@@ -573,14 +572,14 @@ if (isProduction()) {
 
 app.listen(config.port, () => {
   const startupLogger = createContextualLogger({ component: 'startup' });
-  
+
   startupLogger.info('Server started successfully', {
     port: config.port,
     environment: config.nodeEnv,
     url: `http://localhost:${config.port}`,
-    event: 'server_start'
+    event: 'server_start',
   });
-  
+
   // Log system metrics on startup
   logSystemMetrics();
 });

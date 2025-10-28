@@ -48,14 +48,20 @@ const Split = memo(() => {
       }
 
       try {
-        logger.userAction('add_participant', 'form_submit', { splitId: id, participantName: name });
+        logger.userAction('add_participant', 'form_submit', {
+          splitId: id,
+          participantName: name,
+        });
         const participant = await addParticipant(id, name);
         logger.participantAdded(id, name, { participantId: participant.id });
         saveParticipant(participant);
         setName('');
         refreshSplit();
       } catch (err) {
-        logger.apiError('add_participant', err, { splitId: id, participantName: name });
+        logger.apiError('add_participant', err, {
+          splitId: id,
+          participantName: name,
+        });
         alert(err.message || 'Failed to add participant. Please try again.');
       }
     },
@@ -70,26 +76,26 @@ const Split = memo(() => {
       }
 
       try {
-        logger.userAction('add_expense', 'form_submit', { 
-          splitId: id, 
+        logger.userAction('add_expense', 'form_submit', {
+          splitId: id,
           participantId: currentParticipant.id,
           amount: parseFloat(amount),
-          description 
+          description,
         });
         await addExpense(id, currentParticipant.id, description, amount);
-        logger.expenseAdded(id, amount, description, { 
+        logger.expenseAdded(id, amount, description, {
           participantId: currentParticipant.id,
-          participantName: currentParticipant.name 
+          participantName: currentParticipant.name,
         });
         setDescription('');
         setAmount('');
         refreshSplit();
       } catch (err) {
-        logger.apiError('add_expense', err, { 
-          splitId: id, 
+        logger.apiError('add_expense', err, {
+          splitId: id,
           participantId: currentParticipant.id,
           amount,
-          description 
+          description,
         });
         alert(err.message || 'Failed to add expense. Please try again.');
       }
@@ -100,9 +106,16 @@ const Split = memo(() => {
   const handleDeleteExpense = useCallback(
     async expenseId => {
       try {
-        logger.userAction('delete_expense', 'button_click', { splitId: id, expenseId });
+        logger.userAction('delete_expense', 'button_click', {
+          splitId: id,
+          expenseId,
+        });
         await deleteExpense(id, expenseId);
-        logger.info('Expense deleted', { splitId: id, expenseId, event: 'expense_deleted' });
+        logger.info('Expense deleted', {
+          splitId: id,
+          expenseId,
+          event: 'expense_deleted',
+        });
         refreshSplit();
       } catch (err) {
         logger.apiError('delete_expense', err, { splitId: id, expenseId });
@@ -118,24 +131,24 @@ const Split = memo(() => {
     }
 
     try {
-      logger.userAction('mark_done', 'button_click', { 
-        splitId: id, 
-        participantId: currentParticipant.id,
-        participantName: currentParticipant.name 
-      });
-      await markParticipantDone(id, currentParticipant.id);
-      logger.info('Participant marked as done', { 
-        splitId: id, 
+      logger.userAction('mark_done', 'button_click', {
+        splitId: id,
         participantId: currentParticipant.id,
         participantName: currentParticipant.name,
-        event: 'participant_done' 
+      });
+      await markParticipantDone(id, currentParticipant.id);
+      logger.info('Participant marked as done', {
+        splitId: id,
+        participantId: currentParticipant.id,
+        participantName: currentParticipant.name,
+        event: 'participant_done',
       });
       clearParticipant();
       refreshSplit();
     } catch (err) {
-      logger.apiError('mark_participant_done', err, { 
-        splitId: id, 
-        participantId: currentParticipant.id 
+      logger.apiError('mark_participant_done', err, {
+        splitId: id,
+        participantId: currentParticipant.id,
       });
       alert('Failed to mark as done. Please try again.');
     }
@@ -150,18 +163,24 @@ const Split = memo(() => {
   const handleResetParticipant = useCallback(
     async participantId => {
       try {
-        logger.userAction('reset_participant', 'button_click', { splitId: id, participantId });
+        logger.userAction('reset_participant', 'button_click', {
+          splitId: id,
+          participantId,
+        });
         const participant = await resetParticipant(id, participantId);
-        logger.info('Participant reset', { 
-          splitId: id, 
+        logger.info('Participant reset', {
+          splitId: id,
           participantId,
           participantName: participant.name,
-          event: 'participant_reset' 
+          event: 'participant_reset',
         });
         saveParticipant(participant);
         refreshSplit();
       } catch (err) {
-        logger.apiError('reset_participant', err, { splitId: id, participantId });
+        logger.apiError('reset_participant', err, {
+          splitId: id,
+          participantId,
+        });
         alert('Failed to reset participant. Please try again.');
       }
     },

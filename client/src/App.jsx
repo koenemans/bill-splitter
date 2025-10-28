@@ -9,10 +9,13 @@ function App() {
 
   useEffect(() => {
     // Log page views for analytics
-    const pageName = location.pathname === '/' ? 'Home' : 
-                    location.pathname.startsWith('/split/') ? 'Split' : 
-                    'Unknown';
-    
+    const pageName =
+      location.pathname === '/'
+        ? 'Home'
+        : location.pathname.startsWith('/split/')
+          ? 'Split'
+          : 'Unknown';
+
     logger.pageView(pageName, location.pathname + location.search);
   }, [location]);
 
