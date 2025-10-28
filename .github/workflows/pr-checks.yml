@@ -3,11 +3,22 @@ name: PR Checks
 on:
   pull_request:
     branches: [ main ]
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '18'
+  CACHE_DEPENDENCY_PATH: |
+    package-lock.json
+    client/package-lock.json
+    server/package-lock.json
 
 jobs:
-  audit:
-    name: Security Audit
+  # Setup job to install dependencies and cache them
+  setup:
+    name: Setup Dependencies
     runs-on: ubuntu-latest
+    outputs:
+      cache-key: ${{ steps.cache-keys.outputs.cache-key }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -15,41 +26,165 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
 
-      - name: Run npm audit
-        run: npm audit --audit-level=moderate
+      - name: Generate cache key
+        id: cache-keys
+        run: |
+          echo "cache-key=deps-${{ hashFiles('**/package-lock.json') }}" >> $GITHUB_OUTPUT
 
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            client/node_modules
+            server/node_modules
+          key: ${{ steps.cache-keys.outputs.cache-key }}
+          restore-keys: |
+            deps-
+
+      - name: Install root dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Install client dependencies
+        working-directory: ./client
+        run: npm ci --ignore-scripts
+
+      - name: Install server dependencies
+        working-directory: ./server
+        run: npm ci --ignore-scripts
+
+  # Security audit job
+  security-audit:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    needs: setup
+    strategy:
+      matrix:
+        component: [root, client, server]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Restore dependencies cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            client/node_modules
+            server/node_modules
+          key: ${{ needs.setup.outputs.cache-key }}
+
+      - name: Run security audit
+        run: |
+          case "${{ matrix.component }}" in
+            "root")
+              npm audit --audit-level=moderate --omit=dev
+              ;;
+            "client")
+              cd client && npm audit --audit-level=moderate --omit=dev
+              ;;
+            "server")
+              cd server && npm audit --audit-level=moderate --omit=dev
+              ;;
+          esac
+
+  # Linting and code quality
+  lint:
+    name: Code Quality & Linting
+    runs-on: ubuntu-latest
+    needs: setup
+    strategy:
+      matrix:
+        component: [client, server]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Restore dependencies cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            client/node_modules
+            server/node_modules
+          key: ${{ needs.setup.outputs.cache-key }}
+
+      - name: Check for console statements
+        run: |
+          component_path="${{ matrix.component }}"
+          if find "$component_path/src" -name "*.js" -o -name "*.jsx" -o -name "*.ts" -o -name "*.tsx" 2>/dev/null | xargs grep -l "console\.\(log\|debug\|info\|warn\)" 2>/dev/null; then
+            echo "❌ Console statements found in $component_path source code"
+            echo "Please remove console statements before merging"
+            exit 1
+          else
+            echo "✅ No console statements found in $component_path"
+          fi
+
+      - name: Run ESLint
+        working-directory: ./${{ matrix.component }}
+        run: npm run lint
+
+      - name: Check code formatting
+        working-directory: ./${{ matrix.component }}
+        run: npm run format:check
+
+  # Testing job
   test:
     name: Run Tests
     runs-on: ubuntu-latest
+    needs: setup
+    strategy:
+      matrix:
+        component: [client, server]
+        node-version: ['18', '20']
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Setup Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          cache: 'npm'
+          node-version: ${{ matrix.node-version }}
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Restore dependencies cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            client/node_modules
+            server/node_modules
+          key: ${{ needs.setup.outputs.cache-key }}
 
       - name: Run tests
+        working-directory: ./${{ matrix.component }}
         run: npm test
 
       - name: Upload coverage reports
-        if: always()
+        if: matrix.node-version == '18'
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-report
-          path: coverage/
+          name: coverage-report-${{ matrix.component }}
+          path: ${{ matrix.component }}/coverage/
           retention-days: 7
 
+  # Build job
   build:
     name: Build Application
     runs-on: ubuntu-latest
+    needs: [setup, lint, test]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -57,45 +192,61 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          cache: 'npm'
+          node-version: ${{ env.NODE_VERSION }}
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Restore dependencies cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            client/node_modules
+            server/node_modules
+          key: ${{ needs.setup.outputs.cache-key }}
 
-      - name: Build application
-        run: npm run build
+      - name: Build client application
+        run: npm run client:build
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: build-output
-          path: dist/
+          path: client/dist/
           retention-days: 7
 
-  lint:
-    name: Code Quality
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: Install size-limit
+        run: npm install --no-save size-limit @size-limit/file
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          cache: 'npm'
+      - name: Check bundle size
+        run: npx size-limit
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Check for console logs
+      - name: Check build size
         run: |
-          if grep -r "console\.\(log\|debug\|info\)" src/ --exclude-dir=node_modules; then
-            echo "⚠️  Warning: Console statements found in source code"
-            exit 0
+          if [ -d "client/dist" ]; then
+            size=$(du -sh client/dist | cut -f1)
+            echo "📦 Build size: $size"
+            
+            # Check if build is larger than 10MB
+            size_bytes=$(du -sb client/dist | cut -f1)
+            if [ "$size_bytes" -gt 10485760 ]; then
+              echo "⚠️  Warning: Build size is larger than 10MB"
+            fi
           fi
 
-      - name: Check code formatting
+  # Final status check
+  pr-checks-complete:
+    name: All PR Checks Complete
+    runs-on: ubuntu-latest
+    needs: [security-audit, lint, test, build]
+    if: always()
+    steps:
+      - name: Check all jobs status
         run: |
-          echo "✓ Code formatting check passed"
+          if [[ "${{ needs.security-audit.result }}" == "success" && 
+                "${{ needs.lint.result }}" == "success" && 
+                "${{ needs.test.result }}" == "success" && 
+                "${{ needs.build.result }}" == "success" ]]; then
+            echo "✅ All PR checks passed successfully!"
+          else
+            echo "❌ Some PR checks failed"
+            exit 1
+          fi

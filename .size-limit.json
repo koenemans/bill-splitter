@@ -1,0 +1,23 @@
+[
+  {
+    "name": "Client Bundle (JS)",
+    "path": "client/dist/assets/*.js",
+    "limit": "500 KB",
+    "webpack": false,
+    "gzip": true
+  },
+  {
+    "name": "Client Bundle (CSS)",
+    "path": "client/dist/assets/*.css",
+    "limit": "50 KB",
+    "webpack": false,
+    "gzip": true
+  },
+  {
+    "name": "Total Client Bundle",
+    "path": "client/dist/assets/*",
+    "limit": "600 KB",
+    "webpack": false,
+    "gzip": true
+  }
+]

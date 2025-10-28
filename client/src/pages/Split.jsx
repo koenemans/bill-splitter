@@ -26,11 +26,11 @@ const Split = memo(() => {
   } = useParticipant(id)
   
   // Form states
-  const [name, setName] = useState('')
-  const [description, setDescription] = useState('')
-  const [amount, setAmount] = useState('')
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [amount, setAmount] = useState('');
 
-  const shareUrl = `${window.location.origin}/split/${id}`
+  const shareUrl = `${window.location.origin}/split/${id}`;
 
   // Restore participant when split data is loaded
   useEffect(() => {
@@ -115,42 +115,44 @@ const Split = memo(() => {
     alert('Link copied to clipboard!')
   }, [shareUrl])
 
-  const myExpenses = split?.expenses.filter(e => e.participantId === currentParticipant?.id) || []
-  const myTotal = myExpenses.reduce((sum, e) => sum + e.amount, 0)
+  const myExpenses =
+    split?.expenses.filter(e => e.participantId === currentParticipant?.id) ||
+    [];
+  const myTotal = myExpenses.reduce((sum, e) => sum + e.amount, 0);
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xl text-gray-600">Loading...</div>
+      <div className='min-h-screen flex items-center justify-center'>
+        <div className='text-xl text-gray-600'>Loading...</div>
       </div>
-    )
+    );
   }
 
   if (!split) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xl text-red-600">Split not found</div>
+      <div className='min-h-screen flex items-center justify-center'>
+        <div className='text-xl text-red-600'>Split not found</div>
       </div>
-    )
+    );
   }
 
   return (
-    <div className="min-h-screen p-4 py-8">
-      <div className="max-w-4xl mx-auto">
+    <div className='min-h-screen p-4 py-8'>
+      <div className='max-w-4xl mx-auto'>
         {/* Header */}
-        <div className="bg-white rounded-2xl shadow-xl p-6 mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Bill Split</h1>
-          
-          <div className="flex gap-2">
+        <div className='bg-white rounded-2xl shadow-xl p-6 mb-6'>
+          <h1 className='text-2xl font-bold text-gray-900 mb-4'>Bill Split</h1>
+
+          <div className='flex gap-2'>
             <input
-              type="text"
+              type='text'
               value={shareUrl}
               readOnly
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-sm"
+              className='flex-1 px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-sm'
             />
             <button
               onClick={copyLink}
-              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+              className='px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors'
             >
               Copy Link
             </button>
@@ -161,11 +163,13 @@ const Split = memo(() => {
         <SettlementDisplay settlement={settlement} />
 
         {/* Participants */}
-        <div className="bg-white rounded-2xl shadow-xl p-6 mb-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Participants</h2>
-          
+        <div className='bg-white rounded-2xl shadow-xl p-6 mb-6'>
+          <h2 className='text-xl font-bold text-gray-900 mb-4'>Participants</h2>
+
           {split.participants.length === 0 ? (
-            <p className="text-gray-500 text-center py-4">No participants yet</p>
+            <p className='text-gray-500 text-center py-4'>
+              No participants yet
+            </p>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
               {split.participants.map((p) => (
@@ -185,28 +189,28 @@ const Split = memo(() => {
             <h2 className="text-xl font-bold text-gray-900 mb-4">Join the Split</h2>
             <form onSubmit={handleAddParticipant} className="flex gap-3">
               <input
-                type="text"
+                type='text'
                 value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Enter your name"
-                className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onChange={e => setName(e.target.value)}
+                placeholder='Enter your name'
+                className='flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500'
                 required
               />
               <button
-                type="submit"
-                className="px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all"
+                type='submit'
+                className='px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all'
               >
                 Join
               </button>
             </form>
           </div>
         ) : (
-          <div className="bg-white rounded-2xl shadow-xl p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold text-gray-900">
+          <div className='bg-white rounded-2xl shadow-xl p-6'>
+            <div className='flex justify-between items-center mb-4'>
+              <h2 className='text-xl font-bold text-gray-900'>
                 {currentParticipant.name}'s Expenses
               </h2>
-              <div className="text-lg font-semibold text-indigo-600">
+              <div className='text-lg font-semibold text-indigo-600'>
                 Total: €{myTotal.toFixed(2)}
               </div>
             </div>
@@ -228,29 +232,29 @@ const Split = memo(() => {
             <form onSubmit={handleAddExpense} className="mb-4">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <input
-                  type="text"
+                  type='text'
                   value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Description"
-                  className="sm:col-span-2 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  onChange={e => setDescription(e.target.value)}
+                  placeholder='Description'
+                  className='sm:col-span-2 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500'
                   required
                 />
-                <div className="relative">
-                  <span className="absolute left-3 top-3 text-gray-500">€</span>
+                <div className='relative'>
+                  <span className='absolute left-3 top-3 text-gray-500'>€</span>
                   <input
-                    type="number"
-                    step="0.01"
+                    type='number'
+                    step='0.01'
                     value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    placeholder="0.00"
-                    className="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    onChange={e => setAmount(e.target.value)}
+                    placeholder='0.00'
+                    className='w-full pl-8 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500'
                     required
                   />
                 </div>
               </div>
               <button
-                type="submit"
-                className="w-full mt-3 px-6 py-3 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600 transition-colors"
+                type='submit'
+                className='w-full mt-3 px-6 py-3 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600 transition-colors'
               >
                 Add Expense
               </button>
@@ -272,4 +276,4 @@ const Split = memo(() => {
 
 Split.displayName = 'Split'
 
-export default Split
+export default Split;

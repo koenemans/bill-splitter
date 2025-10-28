@@ -42,7 +42,7 @@ const apiRouter = express.Router();
 if (isProduction()) {
   app.use((req, res, next) => {
     if (req.headers['x-forwarded-proto'] !== 'https') {
-      return res.redirect('https://' + req.headers.host + req.url);
+      return res.redirect(`https://${req.headers.host}${req.url}`);
     }
     next();
   });
@@ -97,8 +97,9 @@ setInterval(() => {
       splits.delete(id);
       console.log(`Deleted expired split: ${id}`);
     }
-  }
-}, 60 * 60 * 1000);
+  },
+  60 * 60 * 1000
+);
 
 // API Routes using Express Router
 
@@ -142,12 +143,12 @@ apiRouter.post('/splits/:id/participants',
     if (!split) {
       return res.status(404).json({ error: 'Split not found' });
     }
-    
+
     // Security: Check participant limit
     if (split.participants.length >= config.limits.maxParticipants) {
       return res.status(400).json({ error: `Maximum ${config.limits.maxParticipants} participants allowed` });
     }
-    
+
     const { name } = req.body;
     const participantId = nanoid(10);
     const participant = {
@@ -156,7 +157,7 @@ apiRouter.post('/splits/:id/participants',
       name: xss(name),
       isDone: false
     };
-    
+
     split.participants.push(participant);
     res.status(201).json(participant);
   })
@@ -178,12 +179,12 @@ apiRouter.post('/splits/:id/expenses',
     if (!split) {
       return res.status(404).json({ error: 'Split not found' });
     }
-    
+
     // Security: Check expense limit
     if (split.expenses.length >= config.limits.maxExpenses) {
       return res.status(400).json({ error: `Maximum ${config.limits.maxExpenses} expenses allowed` });
     }
-    
+
     const { participantId, description, amount } = req.body;
     
     const participant = split.participants.find(p => p.id === participantId);
@@ -199,7 +200,7 @@ apiRouter.post('/splits/:id/expenses',
       description: xss(description),
       amount: parseFloat(amount)
     };
-    
+
     split.expenses.push(expense);
     res.status(201).json(expense);
   })
@@ -215,12 +216,12 @@ apiRouter.delete('/splits/:id/expenses/:expenseId',
     if (!split) {
       return res.status(404).json({ error: 'Split not found' });
     }
-    
+
     const index = split.expenses.findIndex(e => e.id === req.params.expenseId);
     if (index === -1) {
       return res.status(404).json({ error: 'Expense not found' });
     }
-    
+
     split.expenses.splice(index, 1);
     res.status(204).send();
   })
@@ -236,12 +237,14 @@ apiRouter.patch('/splits/:id/participants/:participantId/done',
     if (!split) {
       return res.status(404).json({ error: 'Split not found' });
     }
-    
-    const participant = split.participants.find(p => p.id === req.params.participantId);
+
+    const participant = split.participants.find(
+      p => p.id === req.params.participantId
+    );
     if (!participant) {
       return res.status(404).json({ error: 'Participant not found' });
     }
-    
+
     participant.isDone = true;
     res.json(participant);
   })
@@ -257,12 +260,14 @@ apiRouter.patch('/splits/:id/participants/:participantId/reset',
     if (!split) {
       return res.status(404).json({ error: 'Split not found' });
     }
-    
-    const participant = split.participants.find(p => p.id === req.params.participantId);
+
+    const participant = split.participants.find(
+      p => p.id === req.params.participantId
+    );
     if (!participant) {
       return res.status(404).json({ error: 'Participant not found' });
     }
-    
+
     participant.isDone = false;
     res.json(participant);
   })
@@ -289,77 +294,86 @@ apiRouter.get('/splits/:id/settlement',
       });
     }
 
-  // Calculate total and per-person share
-  const total = split.expenses.reduce((sum, exp) => sum + exp.amount, 0);
-  const numParticipants = split.participants.length;
-  const perPersonShare = total / numParticipants;
+    // Calculate total and per-person share
+    const total = split.expenses.reduce((sum, exp) => sum + exp.amount, 0);
+    const numParticipants = split.participants.length;
+    const perPersonShare = total / numParticipants;
 
-  // Calculate what each person paid
-  const balances = {};
-  split.participants.forEach(p => {
-    balances[p.id] = {
-      name: p.name,
-      paid: 0,
-      owes: perPersonShare
-    };
-  });
+    // Calculate what each person paid
+    const balances = {};
+    split.participants.forEach(p => {
+      balances[p.id] = {
+        name: p.name,
+        paid: 0,
+        owes: perPersonShare,
+      };
+    });
 
-  split.expenses.forEach(exp => {
-    if (balances[exp.participantId]) {
-      balances[exp.participantId].paid += exp.amount;
+    split.expenses.forEach(exp => {
+      if (balances[exp.participantId]) {
+        balances[exp.participantId].paid += exp.amount;
+      }
+    });
+
+    // Calculate net balance (positive = should receive, negative = should pay)
+    const netBalances = Object.entries(balances).map(([id, data]) => ({
+      id,
+      name: data.name,
+      paid: data.paid,
+      owes: data.owes,
+      balance: data.paid - data.owes,
+    }));
+
+    // Save original balances before mutation
+    const originalBalances = netBalances.map(b => ({
+      name: b.name,
+      paid: Math.round(b.paid * 100) / 100,
+      owes: Math.round(b.owes * 100) / 100,
+      balance: Math.round(b.balance * 100) / 100,
+    }));
+
+    // Calculate settlements (who pays whom)
+    const debtors = netBalances
+      .filter(p => p.balance < -0.01)
+      .sort((a, b) => a.balance - b.balance);
+    const creditors = netBalances
+      .filter(p => p.balance > 0.01)
+      .sort((a, b) => b.balance - a.balance);
+
+    const transactions = [];
+    let i = 0,
+      j = 0;
+
+    while (i < debtors.length && j < creditors.length) {
+      const debtor = debtors[i];
+      const creditor = creditors[j];
+      const amount = Math.min(-debtor.balance, creditor.balance);
+
+      if (amount > 0.01) {
+        transactions.push({
+          from: debtor.name,
+          to: creditor.name,
+          amount: Math.round(amount * 100) / 100,
+        });
+      }
+
+      debtor.balance += amount;
+      creditor.balance -= amount;
+
+      if (Math.abs(debtor.balance) < 0.01) {
+        i++;
+      }
+      if (Math.abs(creditor.balance) < 0.01) {
+        j++;
+      }
     }
-  });
-
-  // Calculate net balance (positive = should receive, negative = should pay)
-  const netBalances = Object.entries(balances).map(([id, data]) => ({
-    id,
-    name: data.name,
-    paid: data.paid,
-    owes: data.owes,
-    balance: data.paid - data.owes
-  }));
-
-  // Save original balances before mutation
-  const originalBalances = netBalances.map(b => ({
-    name: b.name,
-    paid: Math.round(b.paid * 100) / 100,
-    owes: Math.round(b.owes * 100) / 100,
-    balance: Math.round(b.balance * 100) / 100
-  }));
-
-  // Calculate settlements (who pays whom)
-  const debtors = netBalances.filter(p => p.balance < -0.01).sort((a, b) => a.balance - b.balance);
-  const creditors = netBalances.filter(p => p.balance > 0.01).sort((a, b) => b.balance - a.balance);
-  
-  const transactions = [];
-  let i = 0, j = 0;
-  
-  while (i < debtors.length && j < creditors.length) {
-    const debtor = debtors[i];
-    const creditor = creditors[j];
-    const amount = Math.min(-debtor.balance, creditor.balance);
-    
-    if (amount > 0.01) {
-      transactions.push({
-        from: debtor.name,
-        to: creditor.name,
-        amount: Math.round(amount * 100) / 100
-      });
-    }
-    
-    debtor.balance += amount;
-    creditor.balance -= amount;
-    
-    if (Math.abs(debtor.balance) < 0.01) i++;
-    if (Math.abs(creditor.balance) < 0.01) j++;
-  }
 
     res.json({
       ready: true,
       total: Math.round(total * 100) / 100,
       perPerson: Math.round(perPersonShare * 100) / 100,
       balances: originalBalances,
-      transactions
+      transactions,
     });
   })
 );
@@ -388,7 +402,7 @@ app.use((error, req, res, next) => {
 // Serve static files in production
 if (isProduction()) {
   app.use(express.static(path.join(__dirname, 'public')));
-  
+
   // Catch all handler: send back React's index.html file for client-side routing
   app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));

@@ -12,10 +12,17 @@
     "start": "cd server && npm start",
     "install:all": "npm install && cd server && npm install && cd ../client && npm install",
     "test": "cd server && npm test && cd ../client && npm test",
+    "test:coverage": "cd server && npm run test:coverage && cd ../client && npm run test:coverage",
+    "lint": "cd server && npm run lint && cd ../client && npm run lint",
+    "lint:fix": "cd server && npm run lint:fix && cd ../client && npm run lint:fix",
+    "format": "cd server && npm run format && cd ../client && npm run format",
+    "format:check": "cd server && npm run format:check && cd ../client && npm run format:check",
     "deploy": "npm run build && npm run start"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "eslint": "^9.38.0",
+    "prettier": "^3.6.2"
   },
   "engines": {
     "node": ">=18.0.0",
