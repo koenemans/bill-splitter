@@ -30,7 +30,10 @@ export const useApi = () => {
       }
 
       // Skip JSON parsing for 204 No Content or empty responses
-      if (response.status === 204 || response.headers?.get('content-length') === '0') {
+      if (
+        response.status === 204 ||
+        response.headers?.get('content-length') === '0'
+      ) {
         return null;
       }
 

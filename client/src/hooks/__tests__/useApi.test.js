@@ -362,7 +362,10 @@ describe('useSplitApi Hook', () => {
 
     let deleteResult;
     await act(async () => {
-      deleteResult = await result.current.deleteExpense('split-id', 'expense-id');
+      deleteResult = await result.current.deleteExpense(
+        'split-id',
+        'expense-id'
+      );
     });
 
     expect(fetch).toHaveBeenCalledWith(
