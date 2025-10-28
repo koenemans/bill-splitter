@@ -1,4 +1,4 @@
-# Test Suite Summary
+# Testing Documentation
 
 ## Overview
 Comprehensive test suite for the Bill Splitter application covering both backend API and frontend components.

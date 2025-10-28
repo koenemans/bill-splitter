@@ -1,69 +1,5 @@
 # Development Guide
 
-## 🚀 Quick Start
-
-### Prerequisites
-- Node.js 18+ 
-- npm 8+
-
-### Installation
-```bash
-# Install all dependencies
-npm run install:all
-
-# Install development dependencies (linting, formatting)
-./install-dev-deps.sh
-```
-
-### Development Commands
-
-#### Running the Application
-```bash
-npm run dev          # Start both client and server in development mode
-npm run client:dev   # Start only the client
-npm run server:dev   # Start only the server
-```
-
-#### Code Quality
-```bash
-npm run lint         # Run ESLint on all components
-npm run lint:fix     # Auto-fix ESLint issues
-npm run format       # Format code with Prettier
-npm run format:check # Check if code is properly formatted
-```
-
-#### Testing
-```bash
-npm test             # Run all tests
-npm run test:coverage # Run tests with coverage report
-npm run test:watch   # Run tests in watch mode
-```
-
-#### Building
-```bash
-npm run build        # Build the client application
-npm start            # Start the production server
-```
-
-## 📁 Project Structure
-
-```
-bill-splitter/
-├── client/                 # React frontend
-│   ├── src/
-│   ├── .eslintrc.js       # Client-specific ESLint config
-│   ├── jest.config.js     # Client Jest configuration
-│   └── package.json
-├── server/                 # Express backend
-│   ├── .eslintrc.js       # Server-specific ESLint config
-│   ├── jest.config.js     # Server Jest configuration
-│   └── package.json
-├── .github/workflows/      # CI/CD workflows
-├── .prettierrc            # Prettier configuration
-├── .size-limit.json       # Bundle size limits
-└── package.json           # Root package.json
-```
-
 ## 🔧 Code Quality Standards
 
 ### ESLint Rules
@@ -172,3 +108,22 @@ npm run test:watch  # Run tests in watch mode for debugging
 - Check CI logs for detailed error messages
 - Run commands locally to reproduce issues
 - Ensure all dependencies are installed correctly
+
+## 📁 Detailed Project Structure
+
+```
+bill-splitter/
+├── client/                 # React frontend
+│   ├── src/
+│   ├── .eslintrc.js       # Client-specific ESLint config
+│   ├── jest.config.js     # Client Jest configuration
+│   └── package.json
+├── server/                 # Express backend
+│   ├── .eslintrc.js       # Server-specific ESLint config
+│   ├── jest.config.js     # Server Jest configuration
+│   └── package.json
+├── .github/workflows/      # CI/CD workflows
+├── .prettierrc            # Prettier configuration
+├── .size-limit.json       # Bundle size limits
+└── package.json           # Root package.json
+```
