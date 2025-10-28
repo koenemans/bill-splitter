@@ -1,6 +1,13 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
-import { afterEach, beforeEach, describe, expect, jest, test } from '@jest/globals';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  jest,
+  test,
+} from '@jest/globals';
 import App from '../App';
 
 // Mock fetch globally
@@ -62,7 +69,11 @@ describe('Bill Splitter Integration Tests', () => {
 
       // Check home page elements
       expect(screen.getByText('Bill Splitter')).toBeInTheDocument();
-      expect(screen.getByText('Split bills easily with your friends. No signup required.')).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          'Split bills easily with your friends. No signup required.'
+        )
+      ).toBeInTheDocument();
 
       const createButton = screen.getByText('Create New Split');
       expect(createButton).toBeInTheDocument();
@@ -105,13 +116,13 @@ describe('Bill Splitter Integration Tests', () => {
       id: mockSplitId,
       createdAt: '2023-01-01T00:00:00.000Z',
       participants: [],
-      expenses: []
+      expenses: [],
     };
 
     test('should render split page and show loading state', async () => {
       // Mock split loading with delay
       let resolvePromise;
-      const promise = new Promise((resolve) => {
+      const promise = new Promise(resolve => {
         resolvePromise = resolve;
       });
       fetch.mockReturnValueOnce(promise);
@@ -166,7 +177,6 @@ describe('Bill Splitter Integration Tests', () => {
       );
       expect(global.alert).toHaveBeenCalledWith('Link copied to clipboard!');
     });
-
   });
 
   describe('Error Handling', () => {
@@ -183,6 +193,5 @@ describe('Bill Splitter Integration Tests', () => {
         expect(global.alert).toHaveBeenCalledWith('Network error');
       });
     });
-
   });
 });

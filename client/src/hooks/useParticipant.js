@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 
 // Custom hook for participant management following React rules
-export const useParticipant = (splitId) => {
+export const useParticipant = splitId => {
   const [currentParticipant, setCurrentParticipant] = useState(null);
 
   const storageKey = `bill-splitter-participant-${splitId}`;
@@ -18,12 +18,15 @@ export const useParticipant = (splitId) => {
   }, [splitId, storageKey]);
 
   // Save participant to localStorage
-  const saveParticipant = useCallback((participant) => {
-    if (participant && splitId) {
-      localStorage.setItem(storageKey, participant.id);
-      setCurrentParticipant(participant);
-    }
-  }, [splitId, storageKey]);
+  const saveParticipant = useCallback(
+    participant => {
+      if (participant && splitId) {
+        localStorage.setItem(storageKey, participant.id);
+        setCurrentParticipant(participant);
+      }
+    },
+    [splitId, storageKey]
+  );
 
   // Clear participant from localStorage
   const clearParticipant = useCallback(() => {
@@ -34,21 +37,28 @@ export const useParticipant = (splitId) => {
   }, [splitId, storageKey]);
 
   // Restore participant from split data
-  const restoreParticipant = useCallback((split) => {
-    if (!split || currentParticipant) {return;}
-
-    const savedParticipantId = localStorage.getItem(storageKey);
-    if (savedParticipantId) {
-      const participant = split.participants.find(p => p.id === savedParticipantId);
-
-      if (participant && !participant.isDone) {
-        setCurrentParticipant(participant);
-      } else if (!participant || participant.isDone) {
-        // Clear localStorage if participant doesn't exist or is done
-        clearParticipant();
+  const restoreParticipant = useCallback(
+    split => {
+      if (!split || currentParticipant) {
+        return;
       }
-    }
-  }, [currentParticipant, storageKey, clearParticipant]);
+
+      const savedParticipantId = localStorage.getItem(storageKey);
+      if (savedParticipantId) {
+        const participant = split.participants.find(
+          p => p.id === savedParticipantId
+        );
+
+        if (participant && !participant.isDone) {
+          setCurrentParticipant(participant);
+        } else if (!participant || participant.isDone) {
+          // Clear localStorage if participant doesn't exist or is done
+          clearParticipant();
+        }
+      }
+    },
+    [currentParticipant, storageKey, clearParticipant]
+  );
 
   return {
     currentParticipant,

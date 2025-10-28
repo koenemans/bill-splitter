@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useSplitApi } from './useApi';
 
 // Custom hook for split data management with polling following React rules
-export const useSplit = (splitId) => {
+export const useSplit = splitId => {
   const [split, setSplit] = useState(null);
   const [settlement, setSettlement] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -10,13 +10,18 @@ export const useSplit = (splitId) => {
 
   // Load split data
   const loadSplit = useCallback(async () => {
-    if (!splitId) {return;}
+    if (!splitId) {
+      return;
+    }
 
     try {
       const data = await getSplit(splitId);
       setSplit(data);
     } catch (err) {
-      if (err.message.includes('404') || err.message.includes('Split not found')) {
+      if (
+        err.message.includes('404') ||
+        err.message.includes('Split not found')
+      ) {
         setSplit(null);
       }
       console.error('Error loading split:', err);
@@ -27,7 +32,9 @@ export const useSplit = (splitId) => {
 
   // Load settlement data
   const loadSettlement = useCallback(async () => {
-    if (!splitId) {return;}
+    if (!splitId) {
+      return;
+    }
 
     try {
       const data = await getSettlement(splitId);
@@ -41,7 +48,11 @@ export const useSplit = (splitId) => {
 
   // Check if all participants are done and load settlement
   useEffect(() => {
-    if (split && split.participants.length > 0 && split.participants.every(p => p.isDone)) {
+    if (
+      split &&
+      split.participants.length > 0 &&
+      split.participants.every(p => p.isDone)
+    ) {
       loadSettlement();
     } else {
       setSettlement(null);
@@ -50,7 +61,9 @@ export const useSplit = (splitId) => {
 
   // Initial load and polling setup
   useEffect(() => {
-    if (!splitId) {return;}
+    if (!splitId) {
+      return;
+    }
 
     loadSplit();
 

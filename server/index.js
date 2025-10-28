@@ -22,13 +22,13 @@ const config = {
     maxNameLength: 100,
     maxDescriptionLength: 200,
     maxAmount: 1000000,
-    requestBodySize: '10kb'
+    requestBodySize: '10kb',
   },
   rateLimit: {
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100 // requests per window
+    max: 100, // requests per window
   },
-  splitExpiryMs: 7 * 24 * 60 * 60 * 1000 // 7 days
+  splitExpiryMs: 7 * 24 * 60 * 60 * 1000, // 7 days
 };
 
 const isProduction = () => config.nodeEnv === 'production';
@@ -52,10 +52,12 @@ if (isProduction()) {
 app.use(helmet());
 
 // Security: CORS with restricted origins
-app.use(cors({
-  origin: config.allowedOrigin,
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: config.allowedOrigin,
+    credentials: true,
+  })
+);
 
 // Body parsers
 app.use(express.json({ limit: config.limits.requestBodySize }));
@@ -64,7 +66,7 @@ app.use(express.json({ limit: config.limits.requestBodySize }));
 const limiter = rateLimit({
   windowMs: config.rateLimit.windowMs,
   max: config.rateLimit.max,
-  message: 'Too many requests from this IP, please try again later.'
+  message: 'Too many requests from this IP, please try again later.',
 });
 app.use('/api/', limiter);
 
@@ -77,47 +79,54 @@ const handleValidationErrors = (req, res, next) => {
   if (!errors.isEmpty()) {
     return res.status(400).json({
       error: 'Validation failed',
-      details: errors.array().map(err => err.msg)
+      details: errors.array().map(err => err.msg),
     });
   }
   next();
 };
 
 // Async error handler wrapper
-const asyncHandler = (fn) => (req, res, next) => {
+const asyncHandler = fn => (req, res, next) => {
   Promise.resolve(fn(req, res, next)).catch(next);
 };
 
 // Security: Clean up old splits every hour
-setInterval(() => {
-  const now = new Date();
-  for (const [id, split] of splits.entries()) {
-    const age = now - new Date(split.createdAt);
-    if (age > config.splitExpiryMs) {
-      splits.delete(id);
-      console.log(`Deleted expired split: ${id}`);
+setInterval(
+  () => {
+    const now = new Date();
+    for (const [id, split] of splits.entries()) {
+      const age = now - new Date(split.createdAt);
+      if (age > config.splitExpiryMs) {
+        splits.delete(id);
+        console.log(`Deleted expired split: ${id}`);
+      }
     }
-  }
-}, 60 * 60 * 1000);
+  },
+  60 * 60 * 1000
+);
 
 // API Routes using Express Router
 
 // Create a new split
-apiRouter.post('/splits', asyncHandler((req, res) => {
-  // Security: Use longer nanoid for better security
-  const id = nanoid(12);
-  const split = {
-    id,
-    createdAt: new Date().toISOString(),
-    participants: [],
-    expenses: []
-  };
-  splits.set(id, split);
-  res.status(201).json({ id });
-}));
+apiRouter.post(
+  '/splits',
+  asyncHandler((req, res) => {
+    // Security: Use longer nanoid for better security
+    const id = nanoid(12);
+    const split = {
+      id,
+      createdAt: new Date().toISOString(),
+      participants: [],
+      expenses: [],
+    };
+    splits.set(id, split);
+    res.status(201).json({ id });
+  })
+);
 
 // Get split details
-apiRouter.get('/splits/:id',
+apiRouter.get(
+  '/splits/:id',
   param('id').isLength({ min: 12, max: 12 }).withMessage('Invalid split ID'),
   handleValidationErrors,
   asyncHandler((req, res) => {
@@ -130,12 +139,17 @@ apiRouter.get('/splits/:id',
 );
 
 // Add participant
-apiRouter.post('/splits/:id/participants',
+apiRouter.post(
+  '/splits/:id/participants',
   param('id').isLength({ min: 12, max: 12 }).withMessage('Invalid split ID'),
   body('name')
     .trim()
-    .notEmpty().withMessage('Name is required')
-    .isLength({ max: config.limits.maxNameLength }).withMessage(`Name must be under ${config.limits.maxNameLength} characters`),
+    .notEmpty()
+    .withMessage('Name is required')
+    .isLength({ max: config.limits.maxNameLength })
+    .withMessage(
+      `Name must be under ${config.limits.maxNameLength} characters`
+    ),
   handleValidationErrors,
   asyncHandler((req, res) => {
     const split = splits.get(req.params.id);
@@ -145,7 +159,9 @@ apiRouter.post('/splits/:id/participants',
 
     // Security: Check participant limit
     if (split.participants.length >= config.limits.maxParticipants) {
-      return res.status(400).json({ error: `Maximum ${config.limits.maxParticipants} participants allowed` });
+      return res.status(400).json({
+        error: `Maximum ${config.limits.maxParticipants} participants allowed`,
+      });
     }
 
     const { name } = req.body;
@@ -154,7 +170,7 @@ apiRouter.post('/splits/:id/participants',
       id: participantId,
       // Security: Sanitize name to prevent XSS
       name: xss(name),
-      isDone: false
+      isDone: false,
     };
 
     split.participants.push(participant);
@@ -163,15 +179,21 @@ apiRouter.post('/splits/:id/participants',
 );
 
 // Add expense
-apiRouter.post('/splits/:id/expenses',
+apiRouter.post(
+  '/splits/:id/expenses',
   param('id').isLength({ min: 12, max: 12 }).withMessage('Invalid split ID'),
   body('participantId').notEmpty().withMessage('Participant ID is required'),
   body('description')
     .trim()
-    .notEmpty().withMessage('Description is required')
-    .isLength({ max: config.limits.maxDescriptionLength }).withMessage(`Description must be under ${config.limits.maxDescriptionLength} characters`),
+    .notEmpty()
+    .withMessage('Description is required')
+    .isLength({ max: config.limits.maxDescriptionLength })
+    .withMessage(
+      `Description must be under ${config.limits.maxDescriptionLength} characters`
+    ),
   body('amount')
-    .isFloat({ min: 0.01, max: config.limits.maxAmount }).withMessage(`Amount must be between 0.01 and ${config.limits.maxAmount}`),
+    .isFloat({ min: 0.01, max: config.limits.maxAmount })
+    .withMessage(`Amount must be between 0.01 and ${config.limits.maxAmount}`),
   handleValidationErrors,
   asyncHandler((req, res) => {
     const split = splits.get(req.params.id);
@@ -181,7 +203,9 @@ apiRouter.post('/splits/:id/expenses',
 
     // Security: Check expense limit
     if (split.expenses.length >= config.limits.maxExpenses) {
-      return res.status(400).json({ error: `Maximum ${config.limits.maxExpenses} expenses allowed` });
+      return res.status(400).json({
+        error: `Maximum ${config.limits.maxExpenses} expenses allowed`,
+      });
     }
 
     const { participantId, description, amount } = req.body;
@@ -197,7 +221,7 @@ apiRouter.post('/splits/:id/expenses',
       participantId,
       // Security: Sanitize description to prevent XSS
       description: xss(description),
-      amount: parseFloat(amount)
+      amount: parseFloat(amount),
     };
 
     split.expenses.push(expense);
@@ -206,9 +230,12 @@ apiRouter.post('/splits/:id/expenses',
 );
 
 // Delete expense
-apiRouter.delete('/splits/:id/expenses/:expenseId',
+apiRouter.delete(
+  '/splits/:id/expenses/:expenseId',
   param('id').isLength({ min: 12, max: 12 }).withMessage('Invalid split ID'),
-  param('expenseId').isLength({ min: 10, max: 10 }).withMessage('Invalid expense ID'),
+  param('expenseId')
+    .isLength({ min: 10, max: 10 })
+    .withMessage('Invalid expense ID'),
   handleValidationErrors,
   asyncHandler((req, res) => {
     const split = splits.get(req.params.id);
@@ -227,9 +254,12 @@ apiRouter.delete('/splits/:id/expenses/:expenseId',
 );
 
 // Mark participant as done
-apiRouter.patch('/splits/:id/participants/:participantId/done',
+apiRouter.patch(
+  '/splits/:id/participants/:participantId/done',
   param('id').isLength({ min: 12, max: 12 }).withMessage('Invalid split ID'),
-  param('participantId').isLength({ min: 10, max: 10 }).withMessage('Invalid participant ID'),
+  param('participantId')
+    .isLength({ min: 10, max: 10 })
+    .withMessage('Invalid participant ID'),
   handleValidationErrors,
   asyncHandler((req, res) => {
     const split = splits.get(req.params.id);
@@ -250,9 +280,12 @@ apiRouter.patch('/splits/:id/participants/:participantId/done',
 );
 
 // Reset participant done status
-apiRouter.patch('/splits/:id/participants/:participantId/reset',
+apiRouter.patch(
+  '/splits/:id/participants/:participantId/reset',
   param('id').isLength({ min: 12, max: 12 }).withMessage('Invalid split ID'),
-  param('participantId').isLength({ min: 10, max: 10 }).withMessage('Invalid participant ID'),
+  param('participantId')
+    .isLength({ min: 10, max: 10 })
+    .withMessage('Invalid participant ID'),
   handleValidationErrors,
   asyncHandler((req, res) => {
     const split = splits.get(req.params.id);
@@ -273,7 +306,8 @@ apiRouter.patch('/splits/:id/participants/:participantId/reset',
 );
 
 // Calculate settlement
-apiRouter.get('/splits/:id/settlement',
+apiRouter.get(
+  '/splits/:id/settlement',
   param('id').isLength({ min: 12, max: 12 }).withMessage('Invalid split ID'),
   handleValidationErrors,
   asyncHandler((req, res) => {
@@ -283,13 +317,13 @@ apiRouter.get('/splits/:id/settlement',
     }
 
     // Check if all participants are done
-    const allDone = split.participants.length > 0 &&
-                    split.participants.every(p => p.isDone);
+    const allDone =
+      split.participants.length > 0 && split.participants.every(p => p.isDone);
 
     if (!allDone) {
       return res.json({
         ready: false,
-        message: 'Not all participants are done yet'
+        message: 'Not all participants are done yet',
       });
     }
 
@@ -379,7 +413,9 @@ apiRouter.get('/splits/:id/settlement',
 
 // Health check endpoint for Docker and deployment platforms
 apiRouter.get('/health', (req, res) => {
-  res.status(200).json({ status: 'healthy', timestamp: new Date().toISOString() });
+  res
+    .status(200)
+    .json({ status: 'healthy', timestamp: new Date().toISOString() });
 });
 
 // Mount API router
@@ -394,7 +430,7 @@ app.use((error, req, res, _next) => {
 
   res.status(error.status || 500).json({
     error: message,
-    ...(isProduction() ? {} : { stack: error.stack })
+    ...(isProduction() ? {} : { stack: error.stack }),
   });
 });
 

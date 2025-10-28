@@ -1,28 +1,28 @@
-import { memo, useCallback, useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
-import { useSplit } from '../hooks/useSplit'
-import { useSplitApi } from '../hooks/useApi'
-import { useParticipant } from '../hooks/useParticipant'
-import SettlementDisplay from '../components/SettlementDisplay'
-import ParticipantCard from '../components/ParticipantCard'
-import ExpenseItem from '../components/ExpenseItem'
+import { memo, useCallback, useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
+import { useSplit } from '../hooks/useSplit';
+import { useSplitApi } from '../hooks/useApi';
+import { useParticipant } from '../hooks/useParticipant';
+import SettlementDisplay from '../components/SettlementDisplay';
+import ParticipantCard from '../components/ParticipantCard';
+import ExpenseItem from '../components/ExpenseItem';
 
 const Split = memo(() => {
-  const { id } = useParams()
-  const { split, settlement, loading, refreshSplit } = useSplit(id)
+  const { id } = useParams();
+  const { split, settlement, loading, refreshSplit } = useSplit(id);
   const {
     addParticipant,
     addExpense,
     deleteExpense,
     markParticipantDone,
-    resetParticipant
-  } = useSplitApi()
+    resetParticipant,
+  } = useSplitApi();
   const {
     currentParticipant,
     saveParticipant,
     clearParticipant,
-    restoreParticipant
-  } = useParticipant(id)
+    restoreParticipant,
+  } = useParticipant(id);
 
   // Form states
   const [name, setName] = useState('');
@@ -34,80 +34,104 @@ const Split = memo(() => {
   // Restore participant when split data is loaded
   useEffect(() => {
     if (split) {
-      restoreParticipant(split)
+      restoreParticipant(split);
     }
-  }, [split, restoreParticipant])
+  }, [split, restoreParticipant]);
 
   // Event handlers using custom hooks
-  const handleAddParticipant = useCallback(async (e) => {
-    e.preventDefault()
-    if (!name.trim()) {return}
+  const handleAddParticipant = useCallback(
+    async e => {
+      e.preventDefault();
+      if (!name.trim()) {
+        return;
+      }
 
-    try {
-      const participant = await addParticipant(id, name)
-      saveParticipant(participant)
-      setName('')
-      refreshSplit()
-    } catch (err) {
-      console.error('Error adding participant:', err)
-      alert(err.message || 'Failed to add participant. Please try again.')
-    }
-  }, [id, name, addParticipant, saveParticipant, refreshSplit])
+      try {
+        const participant = await addParticipant(id, name);
+        saveParticipant(participant);
+        setName('');
+        refreshSplit();
+      } catch (err) {
+        console.error('Error adding participant:', err);
+        alert(err.message || 'Failed to add participant. Please try again.');
+      }
+    },
+    [id, name, addParticipant, saveParticipant, refreshSplit]
+  );
 
-  const handleAddExpense = useCallback(async (e) => {
-    e.preventDefault()
-    if (!description.trim() || !amount || !currentParticipant) {return}
+  const handleAddExpense = useCallback(
+    async e => {
+      e.preventDefault();
+      if (!description.trim() || !amount || !currentParticipant) {
+        return;
+      }
 
-    try {
-      await addExpense(id, currentParticipant.id, description, amount)
-      setDescription('')
-      setAmount('')
-      refreshSplit()
-    } catch (err) {
-      console.error('Error adding expense:', err)
-      alert(err.message || 'Failed to add expense. Please try again.')
-    }
-  }, [id, currentParticipant, description, amount, addExpense, refreshSplit])
+      try {
+        await addExpense(id, currentParticipant.id, description, amount);
+        setDescription('');
+        setAmount('');
+        refreshSplit();
+      } catch (err) {
+        console.error('Error adding expense:', err);
+        alert(err.message || 'Failed to add expense. Please try again.');
+      }
+    },
+    [id, currentParticipant, description, amount, addExpense, refreshSplit]
+  );
 
-  const handleDeleteExpense = useCallback(async (expenseId) => {
-    try {
-      await deleteExpense(id, expenseId)
-      refreshSplit()
-    } catch (err) {
-      console.error('Error deleting expense:', err)
-      alert('Failed to delete expense. Please try again.')
-    }
-  }, [id, deleteExpense, refreshSplit])
+  const handleDeleteExpense = useCallback(
+    async expenseId => {
+      try {
+        await deleteExpense(id, expenseId);
+        refreshSplit();
+      } catch (err) {
+        console.error('Error deleting expense:', err);
+        alert('Failed to delete expense. Please try again.');
+      }
+    },
+    [id, deleteExpense, refreshSplit]
+  );
 
   const handleMarkDone = useCallback(async () => {
-    if (!currentParticipant) {return}
+    if (!currentParticipant) {
+      return;
+    }
 
     try {
-      await markParticipantDone(id, currentParticipant.id)
-      clearParticipant()
-      refreshSplit()
+      await markParticipantDone(id, currentParticipant.id);
+      clearParticipant();
+      refreshSplit();
     } catch (err) {
-      console.error('Error marking done:', err)
-      alert('Failed to mark as done. Please try again.')
+      console.error('Error marking done:', err);
+      alert('Failed to mark as done. Please try again.');
     }
-  }, [id, currentParticipant, markParticipantDone, clearParticipant, refreshSplit])
+  }, [
+    id,
+    currentParticipant,
+    markParticipantDone,
+    clearParticipant,
+    refreshSplit,
+  ]);
 
-  const handleResetParticipant = useCallback(async (participantId) => {
-    try {
-      const participant = await resetParticipant(id, participantId)
-      saveParticipant(participant)
-      refreshSplit()
-    } catch (err) {
-      console.error('Error resetting participant:', err)
-      alert('Failed to reset participant. Please try again.')
-    }
-  }, [id, resetParticipant, saveParticipant, refreshSplit])
+  const handleResetParticipant = useCallback(
+    async participantId => {
+      try {
+        const participant = await resetParticipant(id, participantId);
+        saveParticipant(participant);
+        refreshSplit();
+      } catch (err) {
+        console.error('Error resetting participant:', err);
+        alert('Failed to reset participant. Please try again.');
+      }
+    },
+    [id, resetParticipant, saveParticipant, refreshSplit]
+  );
 
   // Utility functions
   const copyLink = useCallback(() => {
-    navigator.clipboard.writeText(shareUrl)
-    alert('Link copied to clipboard!')
-  }, [shareUrl])
+    navigator.clipboard.writeText(shareUrl);
+    alert('Link copied to clipboard!');
+  }, [shareUrl]);
 
   const myExpenses =
     split?.expenses.filter(e => e.participantId === currentParticipant?.id) ||
@@ -165,8 +189,8 @@ const Split = memo(() => {
               No participants yet
             </p>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-              {split.participants.map((p) => (
+            <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3'>
+              {split.participants.map(p => (
                 <ParticipantCard
                   key={p.id}
                   participant={p}
@@ -179,9 +203,11 @@ const Split = memo(() => {
 
         {/* Add Participant or Expenses */}
         {!currentParticipant ? (
-          <div className="bg-white rounded-2xl shadow-xl p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Join the Split</h2>
-            <form onSubmit={handleAddParticipant} className="flex gap-3">
+          <div className='bg-white rounded-2xl shadow-xl p-6'>
+            <h2 className='text-xl font-bold text-gray-900 mb-4'>
+              Join the Split
+            </h2>
+            <form onSubmit={handleAddParticipant} className='flex gap-3'>
               <input
                 type='text'
                 value={name}
@@ -211,8 +237,8 @@ const Split = memo(() => {
 
             {/* Expense List */}
             {myExpenses.length > 0 && (
-              <div className="mb-6 space-y-2">
-                {myExpenses.map((expense) => (
+              <div className='mb-6 space-y-2'>
+                {myExpenses.map(expense => (
                   <ExpenseItem
                     key={expense.id}
                     expense={expense}
@@ -223,8 +249,8 @@ const Split = memo(() => {
             )}
 
             {/* Add Expense Form */}
-            <form onSubmit={handleAddExpense} className="mb-4">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <form onSubmit={handleAddExpense} className='mb-4'>
+              <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
                 <input
                   type='text'
                   value={description}
@@ -257,7 +283,7 @@ const Split = memo(() => {
             {/* Done Button */}
             <button
               onClick={handleMarkDone}
-              className="w-full px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold rounded-lg hover:from-green-600 hover:to-emerald-700 transition-all shadow-lg"
+              className='w-full px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold rounded-lg hover:from-green-600 hover:to-emerald-700 transition-all shadow-lg'
             >
               I'm Done Adding Expenses
             </button>
@@ -265,9 +291,9 @@ const Split = memo(() => {
         )}
       </div>
     </div>
-  )
-})
+  );
+});
 
-Split.displayName = 'Split'
+Split.displayName = 'Split';
 
 export default Split;

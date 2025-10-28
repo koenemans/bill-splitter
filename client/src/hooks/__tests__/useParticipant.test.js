@@ -1,5 +1,12 @@
 import { act, renderHook } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, jest, test } from '@jest/globals';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  jest,
+  test,
+} from '@jest/globals';
 import { useParticipant } from '../useParticipant';
 
 // Mock localStorage
@@ -16,7 +23,7 @@ describe('useParticipant Hook', () => {
   const mockParticipant = {
     id: 'participant-id',
     name: 'John Doe',
-    isDone: false
+    isDone: false,
   };
 
   beforeEach(() => {
@@ -59,5 +66,4 @@ describe('useParticipant Hook', () => {
 
     expect(result.current.currentParticipant).toBe(null);
   });
-
 });

@@ -6,7 +6,7 @@ describe('ExpenseItem Component', () => {
   const mockExpense = {
     id: 'expense-id',
     description: 'Dinner at restaurant',
-    amount: 25.50
+    amount: 25.5,
   };
 
   const mockOnDelete = jest.fn();
@@ -16,12 +16,7 @@ describe('ExpenseItem Component', () => {
   });
 
   test('should render expense information', () => {
-    render(
-      <ExpenseItem
-        expense={mockExpense}
-        onDelete={mockOnDelete}
-      />
-    );
+    render(<ExpenseItem expense={mockExpense} onDelete={mockOnDelete} />);
 
     expect(screen.getByText('Dinner at restaurant')).toBeInTheDocument();
     expect(screen.getByText('€25.50')).toBeInTheDocument();
@@ -30,7 +25,7 @@ describe('ExpenseItem Component', () => {
   test('should format amount correctly', () => {
     const expenseWithDifferentAmount = {
       ...mockExpense,
-      amount: 100
+      amount: 100,
     };
 
     render(
@@ -46,14 +41,11 @@ describe('ExpenseItem Component', () => {
   test('should handle decimal amounts correctly', () => {
     const expenseWithDecimal = {
       ...mockExpense,
-      amount: 15.99
+      amount: 15.99,
     };
 
     render(
-      <ExpenseItem
-        expense={expenseWithDecimal}
-        onDelete={mockOnDelete}
-      />
+      <ExpenseItem expense={expenseWithDecimal} onDelete={mockOnDelete} />
     );
 
     expect(screen.getByText('€15.99')).toBeInTheDocument();
@@ -62,26 +54,18 @@ describe('ExpenseItem Component', () => {
   test('should handle small amounts correctly', () => {
     const expenseWithSmallAmount = {
       ...mockExpense,
-      amount: 0.50
+      amount: 0.5,
     };
 
     render(
-      <ExpenseItem
-        expense={expenseWithSmallAmount}
-        onDelete={mockOnDelete}
-      />
+      <ExpenseItem expense={expenseWithSmallAmount} onDelete={mockOnDelete} />
     );
 
     expect(screen.getByText('€0.50')).toBeInTheDocument();
   });
 
   test('should render delete button', () => {
-    render(
-      <ExpenseItem
-        expense={mockExpense}
-        onDelete={mockOnDelete}
-      />
-    );
+    render(<ExpenseItem expense={mockExpense} onDelete={mockOnDelete} />);
 
     const deleteButton = screen.getByLabelText('Delete expense');
     expect(deleteButton).toBeInTheDocument();
@@ -89,12 +73,7 @@ describe('ExpenseItem Component', () => {
   });
 
   test('should call onDelete when delete button is clicked', () => {
-    render(
-      <ExpenseItem
-        expense={mockExpense}
-        onDelete={mockOnDelete}
-      />
-    );
+    render(<ExpenseItem expense={mockExpense} onDelete={mockOnDelete} />);
 
     const deleteButton = screen.getByLabelText('Delete expense');
     fireEvent.click(deleteButton);
@@ -106,7 +85,8 @@ describe('ExpenseItem Component', () => {
   test('should handle long descriptions', () => {
     const expenseWithLongDescription = {
       ...mockExpense,
-      description: 'This is a very long expense description that might cause layout issues in the component'
+      description:
+        'This is a very long expense description that might cause layout issues in the component',
     };
 
     render(
@@ -116,36 +96,39 @@ describe('ExpenseItem Component', () => {
       />
     );
 
-    expect(screen.getByText(expenseWithLongDescription.description)).toBeInTheDocument();
+    expect(
+      screen.getByText(expenseWithLongDescription.description)
+    ).toBeInTheDocument();
   });
 
   test('should handle special characters in description', () => {
     const expenseWithSpecialChars = {
       ...mockExpense,
-      description: 'Café & Bakery - 50% discount!'
+      description: 'Café & Bakery - 50% discount!',
     };
 
     render(
-      <ExpenseItem
-        expense={expenseWithSpecialChars}
-        onDelete={mockOnDelete}
-      />
+      <ExpenseItem expense={expenseWithSpecialChars} onDelete={mockOnDelete} />
     );
 
-    expect(screen.getByText('Café & Bakery - 50% discount!')).toBeInTheDocument();
+    expect(
+      screen.getByText('Café & Bakery - 50% discount!')
+    ).toBeInTheDocument();
   });
 
   test('should have correct styling classes', () => {
-    render(
-      <ExpenseItem
-        expense={mockExpense}
-        onDelete={mockOnDelete}
-      />
-    );
+    render(<ExpenseItem expense={mockExpense} onDelete={mockOnDelete} />);
 
     // Check main container styling
     const container = screen.getByText('Dinner at restaurant').closest('div');
-    expect(container).toHaveClass('flex', 'justify-between', 'items-center', 'p-3', 'bg-gray-50', 'rounded-lg');
+    expect(container).toHaveClass(
+      'flex',
+      'justify-between',
+      'items-center',
+      'p-3',
+      'bg-gray-50',
+      'rounded-lg'
+    );
 
     // Check description styling
     const description = screen.getByText('Dinner at restaurant');
@@ -161,12 +144,7 @@ describe('ExpenseItem Component', () => {
   });
 
   test('should render delete icon SVG', () => {
-    render(
-      <ExpenseItem
-        expense={mockExpense}
-        onDelete={mockOnDelete}
-      />
-    );
+    render(<ExpenseItem expense={mockExpense} onDelete={mockOnDelete} />);
 
     const deleteButton = screen.getByLabelText('Delete expense');
     const svg = deleteButton.querySelector('svg');
@@ -176,24 +154,14 @@ describe('ExpenseItem Component', () => {
   });
 
   test('should be accessible', () => {
-    render(
-      <ExpenseItem
-        expense={mockExpense}
-        onDelete={mockOnDelete}
-      />
-    );
+    render(<ExpenseItem expense={mockExpense} onDelete={mockOnDelete} />);
 
     const deleteButton = screen.getByLabelText('Delete expense');
     expect(deleteButton).toHaveAttribute('aria-label', 'Delete expense');
   });
 
   test('should maintain layout structure', () => {
-    render(
-      <ExpenseItem
-        expense={mockExpense}
-        onDelete={mockOnDelete}
-      />
-    );
+    render(<ExpenseItem expense={mockExpense} onDelete={mockOnDelete} />);
 
     // Check that the amount and delete button are in the same container
     const rightSection = screen.getByText('€25.50').closest('div');
@@ -206,14 +174,11 @@ describe('ExpenseItem Component', () => {
   test('should handle zero amount', () => {
     const expenseWithZeroAmount = {
       ...mockExpense,
-      amount: 0
+      amount: 0,
     };
 
     render(
-      <ExpenseItem
-        expense={expenseWithZeroAmount}
-        onDelete={mockOnDelete}
-      />
+      <ExpenseItem expense={expenseWithZeroAmount} onDelete={mockOnDelete} />
     );
 
     expect(screen.getByText('€0.00')).toBeInTheDocument();
@@ -222,14 +187,11 @@ describe('ExpenseItem Component', () => {
   test('should handle large amounts', () => {
     const expenseWithLargeAmount = {
       ...mockExpense,
-      amount: 999999.99
+      amount: 999999.99,
     };
 
     render(
-      <ExpenseItem
-        expense={expenseWithLargeAmount}
-        onDelete={mockOnDelete}
-      />
+      <ExpenseItem expense={expenseWithLargeAmount} onDelete={mockOnDelete} />
     );
 
     expect(screen.getByText('€999999.99')).toBeInTheDocument();

@@ -1,19 +1,19 @@
-import { memo } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useSplitApi } from '../hooks/useApi'
+import { memo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useSplitApi } from '../hooks/useApi';
 
 const Home = memo(() => {
-  const navigate = useNavigate()
-  const { createSplit, loading, clearError } = useSplitApi()
+  const navigate = useNavigate();
+  const { createSplit, loading, clearError } = useSplitApi();
 
   const handleCreateSplit = async () => {
     try {
-      clearError()
-      const data = await createSplit()
-      navigate(`/split/${data.id}`)
+      clearError();
+      const data = await createSplit();
+      navigate(`/split/${data.id}`);
     } catch (err) {
-      console.error('Error creating split:', err)
-      alert(err.message || 'Failed to create split. Please try again.')
+      console.error('Error creating split:', err);
+      alert(err.message || 'Failed to create split. Please try again.');
     }
   };
 
@@ -102,9 +102,9 @@ const Home = memo(() => {
         </div>
       </div>
     </div>
-  )
-})
+  );
+});
 
-Home.displayName = 'Home'
+Home.displayName = 'Home';
 
 export default Home;

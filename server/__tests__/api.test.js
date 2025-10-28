@@ -21,13 +21,13 @@ const createTestApp = () => {
       maxNameLength: 100,
       maxDescriptionLength: 200,
       maxAmount: 1000000,
-      requestBodySize: '10kb'
+      requestBodySize: '10kb',
     },
     rateLimit: {
       windowMs: 15 * 60 * 1000,
-      max: 100
+      max: 100,
     },
-    splitExpiryMs: 7 * 24 * 60 * 60 * 1000
+    splitExpiryMs: 7 * 24 * 60 * 60 * 1000,
   };
 
   // In-memory storage for tests
@@ -47,33 +47,37 @@ const createTestApp = () => {
     if (!errors.isEmpty()) {
       return res.status(400).json({
         error: 'Validation failed',
-        details: errors.array().map(err => err.msg)
+        details: errors.array().map(err => err.msg),
       });
     }
     next();
   };
 
   // Async error handler wrapper
-  const asyncHandler = (fn) => (req, res, next) => {
+  const asyncHandler = fn => (req, res, next) => {
     Promise.resolve(fn(req, res, next)).catch(next);
   };
 
   // API Routes
   // Create a new split
-  apiRouter.post('/splits', asyncHandler((req, res) => {
-    const id = nanoid(12);
-    const split = {
-      id,
-      createdAt: new Date().toISOString(),
-      participants: [],
-      expenses: []
-    };
-    splits.set(id, split);
-    res.status(201).json({ id });
-  }));
+  apiRouter.post(
+    '/splits',
+    asyncHandler((req, res) => {
+      const id = nanoid(12);
+      const split = {
+        id,
+        createdAt: new Date().toISOString(),
+        participants: [],
+        expenses: [],
+      };
+      splits.set(id, split);
+      res.status(201).json({ id });
+    })
+  );
 
   // Get split details
-  apiRouter.get('/splits/:id',
+  apiRouter.get(
+    '/splits/:id',
     param('id').isLength({ min: 12, max: 12 }).withMessage('Invalid split ID'),
     handleValidationErrors,
     asyncHandler((req, res) => {
@@ -86,12 +90,17 @@ const createTestApp = () => {
   );
 
   // Add participant
-  apiRouter.post('/splits/:id/participants',
+  apiRouter.post(
+    '/splits/:id/participants',
     param('id').isLength({ min: 12, max: 12 }).withMessage('Invalid split ID'),
     body('name')
       .trim()
-      .notEmpty().withMessage('Name is required')
-      .isLength({ max: config.limits.maxNameLength }).withMessage(`Name must be under ${config.limits.maxNameLength} characters`),
+      .notEmpty()
+      .withMessage('Name is required')
+      .isLength({ max: config.limits.maxNameLength })
+      .withMessage(
+        `Name must be under ${config.limits.maxNameLength} characters`
+      ),
     handleValidationErrors,
     asyncHandler((req, res) => {
       const split = splits.get(req.params.id);
@@ -100,7 +109,9 @@ const createTestApp = () => {
       }
 
       if (split.participants.length >= config.limits.maxParticipants) {
-        return res.status(400).json({ error: `Maximum ${config.limits.maxParticipants} participants allowed` });
+        return res.status(400).json({
+          error: `Maximum ${config.limits.maxParticipants} participants allowed`,
+        });
       }
 
       const { name } = req.body;
@@ -108,7 +119,7 @@ const createTestApp = () => {
       const participant = {
         id: participantId,
         name: xss(name),
-        isDone: false
+        isDone: false,
       };
 
       split.participants.push(participant);
@@ -117,15 +128,23 @@ const createTestApp = () => {
   );
 
   // Add expense
-  apiRouter.post('/splits/:id/expenses',
+  apiRouter.post(
+    '/splits/:id/expenses',
     param('id').isLength({ min: 12, max: 12 }).withMessage('Invalid split ID'),
     body('participantId').notEmpty().withMessage('Participant ID is required'),
     body('description')
       .trim()
-      .notEmpty().withMessage('Description is required')
-      .isLength({ max: config.limits.maxDescriptionLength }).withMessage(`Description must be under ${config.limits.maxDescriptionLength} characters`),
+      .notEmpty()
+      .withMessage('Description is required')
+      .isLength({ max: config.limits.maxDescriptionLength })
+      .withMessage(
+        `Description must be under ${config.limits.maxDescriptionLength} characters`
+      ),
     body('amount')
-      .isFloat({ min: 0.01, max: config.limits.maxAmount }).withMessage(`Amount must be between 0.01 and ${config.limits.maxAmount}`),
+      .isFloat({ min: 0.01, max: config.limits.maxAmount })
+      .withMessage(
+        `Amount must be between 0.01 and ${config.limits.maxAmount}`
+      ),
     handleValidationErrors,
     asyncHandler((req, res) => {
       const split = splits.get(req.params.id);
@@ -134,7 +153,9 @@ const createTestApp = () => {
       }
 
       if (split.expenses.length >= config.limits.maxExpenses) {
-        return res.status(400).json({ error: `Maximum ${config.limits.maxExpenses} expenses allowed` });
+        return res.status(400).json({
+          error: `Maximum ${config.limits.maxExpenses} expenses allowed`,
+        });
       }
 
       const { participantId, description, amount } = req.body;
@@ -149,7 +170,7 @@ const createTestApp = () => {
         id: expenseId,
         participantId,
         description: xss(description),
-        amount: parseFloat(amount)
+        amount: parseFloat(amount),
       };
 
       split.expenses.push(expense);
@@ -158,9 +179,12 @@ const createTestApp = () => {
   );
 
   // Delete expense
-  apiRouter.delete('/splits/:id/expenses/:expenseId',
+  apiRouter.delete(
+    '/splits/:id/expenses/:expenseId',
     param('id').isLength({ min: 12, max: 12 }).withMessage('Invalid split ID'),
-    param('expenseId').isLength({ min: 10, max: 10 }).withMessage('Invalid expense ID'),
+    param('expenseId')
+      .isLength({ min: 10, max: 10 })
+      .withMessage('Invalid expense ID'),
     handleValidationErrors,
     asyncHandler((req, res) => {
       const split = splits.get(req.params.id);
@@ -168,7 +192,9 @@ const createTestApp = () => {
         return res.status(404).json({ error: 'Split not found' });
       }
 
-      const index = split.expenses.findIndex(e => e.id === req.params.expenseId);
+      const index = split.expenses.findIndex(
+        e => e.id === req.params.expenseId
+      );
       if (index === -1) {
         return res.status(404).json({ error: 'Expense not found' });
       }
@@ -179,9 +205,12 @@ const createTestApp = () => {
   );
 
   // Mark participant as done
-  apiRouter.patch('/splits/:id/participants/:participantId/done',
+  apiRouter.patch(
+    '/splits/:id/participants/:participantId/done',
     param('id').isLength({ min: 12, max: 12 }).withMessage('Invalid split ID'),
-    param('participantId').isLength({ min: 10, max: 10 }).withMessage('Invalid participant ID'),
+    param('participantId')
+      .isLength({ min: 10, max: 10 })
+      .withMessage('Invalid participant ID'),
     handleValidationErrors,
     asyncHandler((req, res) => {
       const split = splits.get(req.params.id);
@@ -189,7 +218,9 @@ const createTestApp = () => {
         return res.status(404).json({ error: 'Split not found' });
       }
 
-      const participant = split.participants.find(p => p.id === req.params.participantId);
+      const participant = split.participants.find(
+        p => p.id === req.params.participantId
+      );
       if (!participant) {
         return res.status(404).json({ error: 'Participant not found' });
       }
@@ -200,9 +231,12 @@ const createTestApp = () => {
   );
 
   // Reset participant done status
-  apiRouter.patch('/splits/:id/participants/:participantId/reset',
+  apiRouter.patch(
+    '/splits/:id/participants/:participantId/reset',
     param('id').isLength({ min: 12, max: 12 }).withMessage('Invalid split ID'),
-    param('participantId').isLength({ min: 10, max: 10 }).withMessage('Invalid participant ID'),
+    param('participantId')
+      .isLength({ min: 10, max: 10 })
+      .withMessage('Invalid participant ID'),
     handleValidationErrors,
     asyncHandler((req, res) => {
       const split = splits.get(req.params.id);
@@ -210,7 +244,9 @@ const createTestApp = () => {
         return res.status(404).json({ error: 'Split not found' });
       }
 
-      const participant = split.participants.find(p => p.id === req.params.participantId);
+      const participant = split.participants.find(
+        p => p.id === req.params.participantId
+      );
       if (!participant) {
         return res.status(404).json({ error: 'Participant not found' });
       }
@@ -221,7 +257,8 @@ const createTestApp = () => {
   );
 
   // Calculate settlement
-  apiRouter.get('/splits/:id/settlement',
+  apiRouter.get(
+    '/splits/:id/settlement',
     param('id').isLength({ min: 12, max: 12 }).withMessage('Invalid split ID'),
     handleValidationErrors,
     asyncHandler((req, res) => {
@@ -230,13 +267,14 @@ const createTestApp = () => {
         return res.status(404).json({ error: 'Split not found' });
       }
 
-      const allDone = split.participants.length > 0 &&
-                      split.participants.every(p => p.isDone);
+      const allDone =
+        split.participants.length > 0 &&
+        split.participants.every(p => p.isDone);
 
       if (!allDone) {
         return res.json({
           ready: false,
-          message: 'Not all participants are done yet'
+          message: 'Not all participants are done yet',
         });
       }
 
@@ -250,7 +288,7 @@ const createTestApp = () => {
         balances[p.id] = {
           name: p.name,
           paid: 0,
-          owes: perPersonShare
+          owes: perPersonShare,
         };
       });
 
@@ -265,14 +303,14 @@ const createTestApp = () => {
         name: data.name,
         paid: data.paid,
         owes: data.owes,
-        balance: data.paid - data.owes
+        balance: data.paid - data.owes,
       }));
 
       const originalBalances = netBalances.map(b => ({
         name: b.name,
         paid: Math.round(b.paid * 100) / 100,
         owes: Math.round(b.owes * 100) / 100,
-        balance: Math.round(b.balance * 100) / 100
+        balance: Math.round(b.balance * 100) / 100,
       }));
 
       res.json({
@@ -280,14 +318,16 @@ const createTestApp = () => {
         total: Math.round(total * 100) / 100,
         perPerson: Math.round(perPersonShare * 100) / 100,
         balances: originalBalances,
-        transactions: [] // Simplified for tests
+        transactions: [], // Simplified for tests
       });
     })
   );
 
   // Health check
   apiRouter.get('/health', (req, res) => {
-    res.status(200).json({ status: 'healthy', timestamp: new Date().toISOString() });
+    res
+      .status(200)
+      .json({ status: 'healthy', timestamp: new Date().toISOString() });
   });
 
   // Mount API router
@@ -297,7 +337,7 @@ const createTestApp = () => {
   app.use((error, req, res, _next) => {
     console.error('Server error:', error);
     res.status(error.status || 500).json({
-      error: error.message || 'Internal server error'
+      error: error.message || 'Internal server error',
     });
   });
 
@@ -323,9 +363,7 @@ describe('Bill Splitter API Tests', () => {
 
   describe('POST /api/splits', () => {
     test('should create a new split', async () => {
-      const response = await request(app)
-        .post('/api/splits')
-        .expect(201);
+      const response = await request(app).post('/api/splits').expect(201);
 
       expect(response.body).toHaveProperty('id');
       expect(response.body.id).toHaveLength(12);
@@ -347,7 +385,7 @@ describe('Bill Splitter API Tests', () => {
       expect(response.body).toMatchObject({
         id: splitId,
         participants: [],
-        expenses: []
+        expenses: [],
       });
       expect(response.body).toHaveProperty('createdAt');
     });
@@ -367,7 +405,7 @@ describe('Bill Splitter API Tests', () => {
         .expect(404);
 
       expect(response.body).toMatchObject({
-        error: 'Split not found'
+        error: 'Split not found',
       });
     });
   });
@@ -386,7 +424,7 @@ describe('Bill Splitter API Tests', () => {
 
       expect(response.body).toMatchObject({
         name: 'John Doe',
-        isDone: false
+        isDone: false,
       });
       expect(response.body).toHaveProperty('id');
       expect(response.body.id).toHaveLength(10);
@@ -441,14 +479,14 @@ describe('Bill Splitter API Tests', () => {
         .send({
           participantId,
           description: 'Dinner',
-          amount: 25.50
+          amount: 25.5,
         })
         .expect(201);
 
       expect(response.body).toMatchObject({
         participantId,
         description: 'Dinner',
-        amount: 25.50
+        amount: 25.5,
       });
       expect(response.body).toHaveProperty('id');
       expenseId = response.body.id;
@@ -458,7 +496,7 @@ describe('Bill Splitter API Tests', () => {
       const response = await request(app)
         .post(`/api/splits/${splitId}/expenses`)
         .send({
-          description: 'Dinner'
+          description: 'Dinner',
           // Missing participantId and amount
         })
         .expect(400);
@@ -472,7 +510,7 @@ describe('Bill Splitter API Tests', () => {
         .send({
           participantId,
           description: 'Dinner',
-          amount: -5
+          amount: -5,
         })
         .expect(400);
 
@@ -485,12 +523,12 @@ describe('Bill Splitter API Tests', () => {
         .send({
           participantId: 'nonexistent',
           description: 'Dinner',
-          amount: 25.50
+          amount: 25.5,
         })
         .expect(404);
 
       expect(response.body).toMatchObject({
-        error: 'Participant not found'
+        error: 'Participant not found',
       });
     });
   });
@@ -510,7 +548,7 @@ describe('Bill Splitter API Tests', () => {
         .send({
           participantId,
           description: 'Dinner',
-          amount: 25.50
+          amount: 25.5,
         });
       expenseId = expenseResponse.body.id;
     });
@@ -521,8 +559,7 @@ describe('Bill Splitter API Tests', () => {
         .expect(204);
 
       // Verify expense is deleted
-      const splitResponse = await request(app)
-        .get(`/api/splits/${splitId}`);
+      const splitResponse = await request(app).get(`/api/splits/${splitId}`);
 
       expect(splitResponse.body.expenses).toHaveLength(0);
     });
@@ -534,7 +571,7 @@ describe('Bill Splitter API Tests', () => {
         .expect(404);
 
       expect(response.body).toMatchObject({
-        error: 'Expense not found'
+        error: 'Expense not found',
       });
     });
   });
@@ -558,7 +595,7 @@ describe('Bill Splitter API Tests', () => {
       expect(response.body).toMatchObject({
         id: participantId,
         name: 'John Doe',
-        isDone: true
+        isDone: true,
       });
     });
   });
@@ -581,23 +618,22 @@ describe('Bill Splitter API Tests', () => {
 
       expect(response.body).toMatchObject({
         ready: false,
-        message: 'Not all participants are done yet'
+        message: 'Not all participants are done yet',
       });
     });
 
     test('should calculate settlement when all done', async () => {
       // Add expense
-      await request(app)
-        .post(`/api/splits/${splitId}/expenses`)
-        .send({
-          participantId,
-          description: 'Dinner',
-          amount: 30.00
-        });
+      await request(app).post(`/api/splits/${splitId}/expenses`).send({
+        participantId,
+        description: 'Dinner',
+        amount: 30.0,
+      });
 
       // Mark participant as done
-      await request(app)
-        .patch(`/api/splits/${splitId}/participants/${participantId}/done`);
+      await request(app).patch(
+        `/api/splits/${splitId}/participants/${participantId}/done`
+      );
 
       const response = await request(app)
         .get(`/api/splits/${splitId}/settlement`)
@@ -605,8 +641,8 @@ describe('Bill Splitter API Tests', () => {
 
       expect(response.body).toMatchObject({
         ready: true,
-        total: 30.00,
-        perPerson: 30.00
+        total: 30.0,
+        perPerson: 30.0,
       });
       expect(response.body).toHaveProperty('balances');
     });
@@ -614,12 +650,10 @@ describe('Bill Splitter API Tests', () => {
 
   describe('GET /api/health', () => {
     test('should return health status', async () => {
-      const response = await request(app)
-        .get('/api/health')
-        .expect(200);
+      const response = await request(app).get('/api/health').expect(200);
 
       expect(response.body).toMatchObject({
-        status: 'healthy'
+        status: 'healthy',
       });
       expect(response.body).toHaveProperty('timestamp');
     });

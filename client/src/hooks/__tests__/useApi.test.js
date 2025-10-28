@@ -1,5 +1,12 @@
 import { act, renderHook } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, jest, test } from '@jest/globals';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  jest,
+  test,
+} from '@jest/globals';
 import { useApi, useSplitApi } from '../useApi';
 
 // Mock fetch globally
@@ -112,7 +119,7 @@ describe('useApi Hook', () => {
 
   test('should set loading state during API call', async () => {
     let resolvePromise;
-    const promise = new Promise((resolve) => {
+    const promise = new Promise(resolve => {
       resolvePromise = resolve;
     });
 
@@ -188,7 +195,7 @@ describe('useSplitApi Hook', () => {
     const mockSplit = {
       id: 'test-split-id',
       participants: [],
-      expenses: []
+      expenses: [],
     };
     fetch.mockResolvedValueOnce({
       ok: true,
@@ -214,7 +221,7 @@ describe('useSplitApi Hook', () => {
     const mockParticipant = {
       id: 'participant-id',
       name: 'John Doe',
-      isDone: false
+      isDone: false,
     };
     fetch.mockResolvedValueOnce({
       ok: true,
@@ -225,7 +232,10 @@ describe('useSplitApi Hook', () => {
 
     let participantResult;
     await act(async () => {
-      participantResult = await result.current.addParticipant('split-id', 'John Doe');
+      participantResult = await result.current.addParticipant(
+        'split-id',
+        'John Doe'
+      );
     });
 
     expect(fetch).toHaveBeenCalledWith('/api/splits/split-id/participants', {
@@ -243,7 +253,7 @@ describe('useSplitApi Hook', () => {
       id: 'expense-id',
       participantId: 'participant-id',
       description: 'Dinner',
-      amount: 25.50
+      amount: 25.5,
     };
     fetch.mockResolvedValueOnce({
       ok: true,
@@ -270,7 +280,7 @@ describe('useSplitApi Hook', () => {
       body: JSON.stringify({
         participantId: 'participant-id',
         description: 'Dinner',
-        amount: 25.50,
+        amount: 25.5,
       }),
     });
     expect(expenseResult).toEqual(mockExpense);
@@ -288,19 +298,22 @@ describe('useSplitApi Hook', () => {
       await result.current.deleteExpense('split-id', 'expense-id');
     });
 
-    expect(fetch).toHaveBeenCalledWith('/api/splits/split-id/expenses/expense-id', {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+    expect(fetch).toHaveBeenCalledWith(
+      '/api/splits/split-id/expenses/expense-id',
+      {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
   });
 
   test('should mark participant done', async () => {
     const mockParticipant = {
       id: 'participant-id',
       name: 'John Doe',
-      isDone: true
+      isDone: true,
     };
     fetch.mockResolvedValueOnce({
       ok: true,
@@ -311,15 +324,21 @@ describe('useSplitApi Hook', () => {
 
     let participantResult;
     await act(async () => {
-      participantResult = await result.current.markParticipantDone('split-id', 'participant-id');
+      participantResult = await result.current.markParticipantDone(
+        'split-id',
+        'participant-id'
+      );
     });
 
-    expect(fetch).toHaveBeenCalledWith('/api/splits/split-id/participants/participant-id/done', {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+    expect(fetch).toHaveBeenCalledWith(
+      '/api/splits/split-id/participants/participant-id/done',
+      {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
     expect(participantResult).toEqual(mockParticipant);
   });
 
@@ -327,7 +346,7 @@ describe('useSplitApi Hook', () => {
     const mockParticipant = {
       id: 'participant-id',
       name: 'John Doe',
-      isDone: false
+      isDone: false,
     };
     fetch.mockResolvedValueOnce({
       ok: true,
@@ -338,25 +357,31 @@ describe('useSplitApi Hook', () => {
 
     let participantResult;
     await act(async () => {
-      participantResult = await result.current.resetParticipant('split-id', 'participant-id');
+      participantResult = await result.current.resetParticipant(
+        'split-id',
+        'participant-id'
+      );
     });
 
-    expect(fetch).toHaveBeenCalledWith('/api/splits/split-id/participants/participant-id/reset', {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+    expect(fetch).toHaveBeenCalledWith(
+      '/api/splits/split-id/participants/participant-id/reset',
+      {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
     expect(participantResult).toEqual(mockParticipant);
   });
 
   test('should get settlement', async () => {
     const mockSettlement = {
       ready: true,
-      total: 100.00,
-      perPerson: 50.00,
+      total: 100.0,
+      perPerson: 50.0,
       balances: [],
-      transactions: []
+      transactions: [],
     };
     fetch.mockResolvedValueOnce({
       ok: true,

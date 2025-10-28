@@ -20,7 +20,9 @@ export const useApi = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+        throw new Error(
+          errorData.error || `HTTP error! status: ${response.status}`
+        );
       }
 
       const data = await response.json();
@@ -53,49 +55,76 @@ export const useSplitApi = () => {
     return apiCall('/api/splits', { method: 'POST' });
   }, [apiCall]);
 
-  const getSplit = useCallback(async (id) => {
-    return apiCall(`/api/splits/${id}`);
-  }, [apiCall]);
+  const getSplit = useCallback(
+    async id => {
+      return apiCall(`/api/splits/${id}`);
+    },
+    [apiCall]
+  );
 
-  const addParticipant = useCallback(async (splitId, name) => {
-    return apiCall(`/api/splits/${splitId}/participants`, {
-      method: 'POST',
-      body: JSON.stringify({ name }),
-    });
-  }, [apiCall]);
+  const addParticipant = useCallback(
+    async (splitId, name) => {
+      return apiCall(`/api/splits/${splitId}/participants`, {
+        method: 'POST',
+        body: JSON.stringify({ name }),
+      });
+    },
+    [apiCall]
+  );
 
-  const addExpense = useCallback(async (splitId, participantId, description, amount) => {
-    return apiCall(`/api/splits/${splitId}/expenses`, {
-      method: 'POST',
-      body: JSON.stringify({
-        participantId,
-        description,
-        amount: parseFloat(amount),
-      }),
-    });
-  }, [apiCall]);
+  const addExpense = useCallback(
+    async (splitId, participantId, description, amount) => {
+      return apiCall(`/api/splits/${splitId}/expenses`, {
+        method: 'POST',
+        body: JSON.stringify({
+          participantId,
+          description,
+          amount: parseFloat(amount),
+        }),
+      });
+    },
+    [apiCall]
+  );
 
-  const deleteExpense = useCallback(async (splitId, expenseId) => {
-    return apiCall(`/api/splits/${splitId}/expenses/${expenseId}`, {
-      method: 'DELETE',
-    });
-  }, [apiCall]);
+  const deleteExpense = useCallback(
+    async (splitId, expenseId) => {
+      return apiCall(`/api/splits/${splitId}/expenses/${expenseId}`, {
+        method: 'DELETE',
+      });
+    },
+    [apiCall]
+  );
 
-  const markParticipantDone = useCallback(async (splitId, participantId) => {
-    return apiCall(`/api/splits/${splitId}/participants/${participantId}/done`, {
-      method: 'PATCH',
-    });
-  }, [apiCall]);
+  const markParticipantDone = useCallback(
+    async (splitId, participantId) => {
+      return apiCall(
+        `/api/splits/${splitId}/participants/${participantId}/done`,
+        {
+          method: 'PATCH',
+        }
+      );
+    },
+    [apiCall]
+  );
 
-  const resetParticipant = useCallback(async (splitId, participantId) => {
-    return apiCall(`/api/splits/${splitId}/participants/${participantId}/reset`, {
-      method: 'PATCH',
-    });
-  }, [apiCall]);
+  const resetParticipant = useCallback(
+    async (splitId, participantId) => {
+      return apiCall(
+        `/api/splits/${splitId}/participants/${participantId}/reset`,
+        {
+          method: 'PATCH',
+        }
+      );
+    },
+    [apiCall]
+  );
 
-  const getSettlement = useCallback(async (splitId) => {
-    return apiCall(`/api/splits/${splitId}/settlement`);
-  }, [apiCall]);
+  const getSettlement = useCallback(
+    async splitId => {
+      return apiCall(`/api/splits/${splitId}/settlement`);
+    },
+    [apiCall]
+  );
 
   return {
     loading,

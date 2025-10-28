@@ -6,7 +6,7 @@ describe('ParticipantCard Component', () => {
   const mockParticipant = {
     id: 'participant-id',
     name: 'John Doe',
-    isDone: false
+    isDone: false,
   };
 
   const mockOnReset = jest.fn();
@@ -17,10 +17,7 @@ describe('ParticipantCard Component', () => {
 
   test('should render participant information', () => {
     render(
-      <ParticipantCard
-        participant={mockParticipant}
-        onReset={mockOnReset}
-      />
+      <ParticipantCard participant={mockParticipant} onReset={mockOnReset} />
     );
 
     expect(screen.getByText('John Doe')).toBeInTheDocument();
@@ -29,10 +26,7 @@ describe('ParticipantCard Component', () => {
 
   test('should show correct styling for active participant', () => {
     render(
-      <ParticipantCard
-        participant={mockParticipant}
-        onReset={mockOnReset}
-      />
+      <ParticipantCard participant={mockParticipant} onReset={mockOnReset} />
     );
 
     expect(screen.getByText('John Doe')).toBeInTheDocument();
@@ -43,10 +37,7 @@ describe('ParticipantCard Component', () => {
     const doneParticipant = { ...mockParticipant, isDone: true };
 
     render(
-      <ParticipantCard
-        participant={doneParticipant}
-        onReset={mockOnReset}
-      />
+      <ParticipantCard participant={doneParticipant} onReset={mockOnReset} />
     );
 
     expect(screen.getByText('John Doe')).toBeInTheDocument();
@@ -56,10 +47,7 @@ describe('ParticipantCard Component', () => {
   test('should show reset button only for done participants', () => {
     // Test with active participant - no reset button
     const { rerender } = render(
-      <ParticipantCard
-        participant={mockParticipant}
-        onReset={mockOnReset}
-      />
+      <ParticipantCard participant={mockParticipant} onReset={mockOnReset} />
     );
 
     expect(screen.queryByText('Reset')).not.toBeInTheDocument();
@@ -67,10 +55,7 @@ describe('ParticipantCard Component', () => {
     // Test with done participant - should show reset button
     const doneParticipant = { ...mockParticipant, isDone: true };
     rerender(
-      <ParticipantCard
-        participant={doneParticipant}
-        onReset={mockOnReset}
-      />
+      <ParticipantCard participant={doneParticipant} onReset={mockOnReset} />
     );
 
     expect(screen.getByText('Reset')).toBeInTheDocument();
@@ -80,10 +65,7 @@ describe('ParticipantCard Component', () => {
     const doneParticipant = { ...mockParticipant, isDone: true };
 
     render(
-      <ParticipantCard
-        participant={doneParticipant}
-        onReset={mockOnReset}
-      />
+      <ParticipantCard participant={doneParticipant} onReset={mockOnReset} />
     );
 
     const resetButton = screen.getByText('Reset');
@@ -96,7 +78,7 @@ describe('ParticipantCard Component', () => {
   test('should handle long participant names', () => {
     const longNameParticipant = {
       ...mockParticipant,
-      name: 'This is a very long participant name that might cause layout issues'
+      name: 'This is a very long participant name that might cause layout issues',
     };
 
     render(
@@ -112,7 +94,7 @@ describe('ParticipantCard Component', () => {
   test('should handle special characters in participant name', () => {
     const specialCharParticipant = {
       ...mockParticipant,
-      name: 'José María & Co.'
+      name: 'José María & Co.',
     };
 
     render(
@@ -129,15 +111,11 @@ describe('ParticipantCard Component', () => {
     const doneParticipant = { ...mockParticipant, isDone: true };
 
     render(
-      <ParticipantCard
-        participant={doneParticipant}
-        onReset={mockOnReset}
-      />
+      <ParticipantCard participant={doneParticipant} onReset={mockOnReset} />
     );
 
     const resetButton = screen.getByText('Reset');
     expect(resetButton).toBeInTheDocument();
     expect(resetButton.tagName).toBe('BUTTON');
   });
-
 });

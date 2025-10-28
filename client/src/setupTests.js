@@ -19,10 +19,22 @@ global.ResizeObserver = class ResizeObserver {
 // Create mock functions
 const mockFn = () => {
   const fn = () => fn;
-  fn.mockImplementation = (impl) => { fn.impl = impl; return fn; };
-  fn.mockReturnValue = (value) => { fn.returnValue = value; return fn; };
-  fn.mockResolvedValue = (value) => { fn.resolvedValue = value; return fn; };
-  fn.mockRejectedValue = (value) => { fn.rejectedValue = value; return fn; };
+  fn.mockImplementation = impl => {
+    fn.impl = impl;
+    return fn;
+  };
+  fn.mockReturnValue = value => {
+    fn.returnValue = value;
+    return fn;
+  };
+  fn.mockResolvedValue = value => {
+    fn.resolvedValue = value;
+    return fn;
+  };
+  fn.mockRejectedValue = value => {
+    fn.rejectedValue = value;
+    return fn;
+  };
   return fn;
 };
 
