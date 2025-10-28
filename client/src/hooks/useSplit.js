@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useSplitApi } from './useApi';
 
 // Custom hook for split data management with polling following React rules
@@ -10,7 +10,7 @@ export const useSplit = (splitId) => {
 
   // Load split data
   const loadSplit = useCallback(async () => {
-    if (!splitId) return;
+    if (!splitId) {return;}
 
     try {
       const data = await getSplit(splitId);
@@ -27,7 +27,7 @@ export const useSplit = (splitId) => {
 
   // Load settlement data
   const loadSettlement = useCallback(async () => {
-    if (!splitId) return;
+    if (!splitId) {return;}
 
     try {
       const data = await getSettlement(splitId);
@@ -50,13 +50,13 @@ export const useSplit = (splitId) => {
 
   // Initial load and polling setup
   useEffect(() => {
-    if (!splitId) return;
+    if (!splitId) {return;}
 
     loadSplit();
-    
+
     // Security: Reduced polling frequency to minimize server load (5 seconds)
     const interval = setInterval(loadSplit, 5000);
-    
+
     return () => clearInterval(interval);
   }, [splitId, loadSplit]);
 

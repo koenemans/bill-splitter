@@ -1,5 +1,5 @@
-import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, test, expect, jest } from '@jest/globals';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { beforeEach, describe, expect, jest, test } from '@jest/globals';
 import ParticipantCard from '../ParticipantCard';
 
 describe('ParticipantCard Component', () => {
@@ -17,9 +17,9 @@ describe('ParticipantCard Component', () => {
 
   test('should render participant information', () => {
     render(
-      <ParticipantCard 
-        participant={mockParticipant} 
-        onReset={mockOnReset} 
+      <ParticipantCard
+        participant={mockParticipant}
+        onReset={mockOnReset}
       />
     );
 
@@ -29,9 +29,9 @@ describe('ParticipantCard Component', () => {
 
   test('should show correct styling for active participant', () => {
     render(
-      <ParticipantCard 
-        participant={mockParticipant} 
-        onReset={mockOnReset} 
+      <ParticipantCard
+        participant={mockParticipant}
+        onReset={mockOnReset}
       />
     );
 
@@ -41,11 +41,11 @@ describe('ParticipantCard Component', () => {
 
   test('should show correct content for done participant', () => {
     const doneParticipant = { ...mockParticipant, isDone: true };
-    
+
     render(
-      <ParticipantCard 
-        participant={doneParticipant} 
-        onReset={mockOnReset} 
+      <ParticipantCard
+        participant={doneParticipant}
+        onReset={mockOnReset}
       />
     );
 
@@ -56,9 +56,9 @@ describe('ParticipantCard Component', () => {
   test('should show reset button only for done participants', () => {
     // Test with active participant - no reset button
     const { rerender } = render(
-      <ParticipantCard 
-        participant={mockParticipant} 
-        onReset={mockOnReset} 
+      <ParticipantCard
+        participant={mockParticipant}
+        onReset={mockOnReset}
       />
     );
 
@@ -67,9 +67,9 @@ describe('ParticipantCard Component', () => {
     // Test with done participant - should show reset button
     const doneParticipant = { ...mockParticipant, isDone: true };
     rerender(
-      <ParticipantCard 
-        participant={doneParticipant} 
-        onReset={mockOnReset} 
+      <ParticipantCard
+        participant={doneParticipant}
+        onReset={mockOnReset}
       />
     );
 
@@ -78,11 +78,11 @@ describe('ParticipantCard Component', () => {
 
   test('should call onReset when reset button is clicked', () => {
     const doneParticipant = { ...mockParticipant, isDone: true };
-    
+
     render(
-      <ParticipantCard 
-        participant={doneParticipant} 
-        onReset={mockOnReset} 
+      <ParticipantCard
+        participant={doneParticipant}
+        onReset={mockOnReset}
       />
     );
 
@@ -100,9 +100,9 @@ describe('ParticipantCard Component', () => {
     };
 
     render(
-      <ParticipantCard 
-        participant={longNameParticipant} 
-        onReset={mockOnReset} 
+      <ParticipantCard
+        participant={longNameParticipant}
+        onReset={mockOnReset}
       />
     );
 
@@ -116,9 +116,9 @@ describe('ParticipantCard Component', () => {
     };
 
     render(
-      <ParticipantCard 
-        participant={specialCharParticipant} 
-        onReset={mockOnReset} 
+      <ParticipantCard
+        participant={specialCharParticipant}
+        onReset={mockOnReset}
       />
     );
 
@@ -127,11 +127,11 @@ describe('ParticipantCard Component', () => {
 
   test('should be accessible', () => {
     const doneParticipant = { ...mockParticipant, isDone: true };
-    
+
     render(
-      <ParticipantCard 
-        participant={doneParticipant} 
-        onReset={mockOnReset} 
+      <ParticipantCard
+        participant={doneParticipant}
+        onReset={mockOnReset}
       />
     );
 

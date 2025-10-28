@@ -1,6 +1,6 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
-import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import { afterEach, beforeEach, describe, expect, jest, test } from '@jest/globals';
 import App from '../App';
 
 // Mock fetch globally
@@ -28,7 +28,7 @@ global.alert = jest.fn();
 // Helper function to render app with router
 const renderApp = (initialRoute = '/') => {
   window.history.pushState({}, 'Test page', initialRoute);
-  
+
   return render(
     <BrowserRouter>
       <App />
@@ -63,7 +63,7 @@ describe('Bill Splitter Integration Tests', () => {
       // Check home page elements
       expect(screen.getByText('Bill Splitter')).toBeInTheDocument();
       expect(screen.getByText('Split bills easily with your friends. No signup required.')).toBeInTheDocument();
-      
+
       const createButton = screen.getByText('Create New Split');
       expect(createButton).toBeInTheDocument();
 
@@ -144,7 +144,6 @@ describe('Bill Splitter Integration Tests', () => {
         expect(screen.getByText('Split not found')).toBeInTheDocument();
       });
     });
-
 
     test('should handle copy link functionality', async () => {
       // Mock split load

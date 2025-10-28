@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 // Custom hook for participant management following React rules
 export const useParticipant = (splitId) => {
@@ -35,12 +35,12 @@ export const useParticipant = (splitId) => {
 
   // Restore participant from split data
   const restoreParticipant = useCallback((split) => {
-    if (!split || currentParticipant) return;
+    if (!split || currentParticipant) {return;}
 
     const savedParticipantId = localStorage.getItem(storageKey);
     if (savedParticipantId) {
       const participant = split.participants.find(p => p.id === savedParticipantId);
-      
+
       if (participant && !participant.isDone) {
         setCurrentParticipant(participant);
       } else if (!participant || participant.isDone) {

@@ -1,4 +1,4 @@
-import { useState, useEffect, memo, useCallback } from 'react'
+import { memo, useCallback, useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useSplit } from '../hooks/useSplit'
 import { useSplitApi } from '../hooks/useApi'
@@ -9,22 +9,21 @@ import ExpenseItem from '../components/ExpenseItem'
 
 const Split = memo(() => {
   const { id } = useParams()
-  const { split, settlement, loading, error, refreshSplit } = useSplit(id)
-  const { 
-    addParticipant, 
-    addExpense, 
-    deleteExpense, 
-    markParticipantDone, 
-    resetParticipant,
-    loading: apiLoading 
+  const { split, settlement, loading, refreshSplit } = useSplit(id)
+  const {
+    addParticipant,
+    addExpense,
+    deleteExpense,
+    markParticipantDone,
+    resetParticipant
   } = useSplitApi()
-  const { 
-    currentParticipant, 
-    saveParticipant, 
-    clearParticipant, 
-    restoreParticipant 
+  const {
+    currentParticipant,
+    saveParticipant,
+    clearParticipant,
+    restoreParticipant
   } = useParticipant(id)
-  
+
   // Form states
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -42,7 +41,7 @@ const Split = memo(() => {
   // Event handlers using custom hooks
   const handleAddParticipant = useCallback(async (e) => {
     e.preventDefault()
-    if (!name.trim()) return
+    if (!name.trim()) {return}
 
     try {
       const participant = await addParticipant(id, name)
@@ -57,7 +56,7 @@ const Split = memo(() => {
 
   const handleAddExpense = useCallback(async (e) => {
     e.preventDefault()
-    if (!description.trim() || !amount || !currentParticipant) return
+    if (!description.trim() || !amount || !currentParticipant) {return}
 
     try {
       await addExpense(id, currentParticipant.id, description, amount)
@@ -81,7 +80,7 @@ const Split = memo(() => {
   }, [id, deleteExpense, refreshSplit])
 
   const handleMarkDone = useCallback(async () => {
-    if (!currentParticipant) return
+    if (!currentParticipant) {return}
 
     try {
       await markParticipantDone(id, currentParticipant.id)
@@ -103,11 +102,6 @@ const Split = memo(() => {
       alert('Failed to reset participant. Please try again.')
     }
   }, [id, resetParticipant, saveParticipant, refreshSplit])
-
-
-
-
-
 
   // Utility functions
   const copyLink = useCallback(() => {

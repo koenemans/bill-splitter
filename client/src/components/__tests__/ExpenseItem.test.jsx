@@ -1,5 +1,5 @@
-import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, test, expect, jest } from '@jest/globals';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { beforeEach, describe, expect, jest, test } from '@jest/globals';
 import ExpenseItem from '../ExpenseItem';
 
 describe('ExpenseItem Component', () => {
@@ -17,9 +17,9 @@ describe('ExpenseItem Component', () => {
 
   test('should render expense information', () => {
     render(
-      <ExpenseItem 
-        expense={mockExpense} 
-        onDelete={mockOnDelete} 
+      <ExpenseItem
+        expense={mockExpense}
+        onDelete={mockOnDelete}
       />
     );
 
@@ -34,9 +34,9 @@ describe('ExpenseItem Component', () => {
     };
 
     render(
-      <ExpenseItem 
-        expense={expenseWithDifferentAmount} 
-        onDelete={mockOnDelete} 
+      <ExpenseItem
+        expense={expenseWithDifferentAmount}
+        onDelete={mockOnDelete}
       />
     );
 
@@ -50,9 +50,9 @@ describe('ExpenseItem Component', () => {
     };
 
     render(
-      <ExpenseItem 
-        expense={expenseWithDecimal} 
-        onDelete={mockOnDelete} 
+      <ExpenseItem
+        expense={expenseWithDecimal}
+        onDelete={mockOnDelete}
       />
     );
 
@@ -66,9 +66,9 @@ describe('ExpenseItem Component', () => {
     };
 
     render(
-      <ExpenseItem 
-        expense={expenseWithSmallAmount} 
-        onDelete={mockOnDelete} 
+      <ExpenseItem
+        expense={expenseWithSmallAmount}
+        onDelete={mockOnDelete}
       />
     );
 
@@ -77,9 +77,9 @@ describe('ExpenseItem Component', () => {
 
   test('should render delete button', () => {
     render(
-      <ExpenseItem 
-        expense={mockExpense} 
-        onDelete={mockOnDelete} 
+      <ExpenseItem
+        expense={mockExpense}
+        onDelete={mockOnDelete}
       />
     );
 
@@ -90,9 +90,9 @@ describe('ExpenseItem Component', () => {
 
   test('should call onDelete when delete button is clicked', () => {
     render(
-      <ExpenseItem 
-        expense={mockExpense} 
-        onDelete={mockOnDelete} 
+      <ExpenseItem
+        expense={mockExpense}
+        onDelete={mockOnDelete}
       />
     );
 
@@ -110,9 +110,9 @@ describe('ExpenseItem Component', () => {
     };
 
     render(
-      <ExpenseItem 
-        expense={expenseWithLongDescription} 
-        onDelete={mockOnDelete} 
+      <ExpenseItem
+        expense={expenseWithLongDescription}
+        onDelete={mockOnDelete}
       />
     );
 
@@ -126,9 +126,9 @@ describe('ExpenseItem Component', () => {
     };
 
     render(
-      <ExpenseItem 
-        expense={expenseWithSpecialChars} 
-        onDelete={mockOnDelete} 
+      <ExpenseItem
+        expense={expenseWithSpecialChars}
+        onDelete={mockOnDelete}
       />
     );
 
@@ -137,9 +137,9 @@ describe('ExpenseItem Component', () => {
 
   test('should have correct styling classes', () => {
     render(
-      <ExpenseItem 
-        expense={mockExpense} 
-        onDelete={mockOnDelete} 
+      <ExpenseItem
+        expense={mockExpense}
+        onDelete={mockOnDelete}
       />
     );
 
@@ -162,24 +162,24 @@ describe('ExpenseItem Component', () => {
 
   test('should render delete icon SVG', () => {
     render(
-      <ExpenseItem 
-        expense={mockExpense} 
-        onDelete={mockOnDelete} 
+      <ExpenseItem
+        expense={mockExpense}
+        onDelete={mockOnDelete}
       />
     );
 
     const deleteButton = screen.getByLabelText('Delete expense');
     const svg = deleteButton.querySelector('svg');
-    
+
     expect(svg).toBeInTheDocument();
     expect(svg).toHaveClass('w-5', 'h-5');
   });
 
   test('should be accessible', () => {
     render(
-      <ExpenseItem 
-        expense={mockExpense} 
-        onDelete={mockOnDelete} 
+      <ExpenseItem
+        expense={mockExpense}
+        onDelete={mockOnDelete}
       />
     );
 
@@ -189,16 +189,16 @@ describe('ExpenseItem Component', () => {
 
   test('should maintain layout structure', () => {
     render(
-      <ExpenseItem 
-        expense={mockExpense} 
-        onDelete={mockOnDelete} 
+      <ExpenseItem
+        expense={mockExpense}
+        onDelete={mockOnDelete}
       />
     );
 
     // Check that the amount and delete button are in the same container
     const rightSection = screen.getByText('€25.50').closest('div');
     const deleteButton = screen.getByLabelText('Delete expense');
-    
+
     expect(rightSection).toContainElement(deleteButton);
     expect(rightSection).toHaveClass('flex', 'items-center', 'gap-3');
   });
@@ -210,9 +210,9 @@ describe('ExpenseItem Component', () => {
     };
 
     render(
-      <ExpenseItem 
-        expense={expenseWithZeroAmount} 
-        onDelete={mockOnDelete} 
+      <ExpenseItem
+        expense={expenseWithZeroAmount}
+        onDelete={mockOnDelete}
       />
     );
 
@@ -226,9 +226,9 @@ describe('ExpenseItem Component', () => {
     };
 
     render(
-      <ExpenseItem 
-        expense={expenseWithLargeAmount} 
-        onDelete={mockOnDelete} 
+      <ExpenseItem
+        expense={expenseWithLargeAmount}
+        onDelete={mockOnDelete}
       />
     );
 

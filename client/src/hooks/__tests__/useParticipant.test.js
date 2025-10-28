@@ -1,5 +1,5 @@
-import { renderHook, act } from '@testing-library/react';
-import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import { act, renderHook } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, jest, test } from '@jest/globals';
 import { useParticipant } from '../useParticipant';
 
 // Mock localStorage
@@ -59,8 +59,5 @@ describe('useParticipant Hook', () => {
 
     expect(result.current.currentParticipant).toBe(null);
   });
-
-
-
 
 });

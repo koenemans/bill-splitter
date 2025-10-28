@@ -1,5 +1,5 @@
-import { renderHook, act } from '@testing-library/react';
-import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import { act, renderHook } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, jest, test } from '@jest/globals';
 import { useApi, useSplitApi } from '../useApi';
 
 // Mock fetch globally
@@ -95,7 +95,7 @@ describe('useApi Hook', () => {
     await act(async () => {
       try {
         await result.current.apiCall('/test-endpoint');
-      } catch (error) {
+      } catch {
         // Expected error
       }
     });

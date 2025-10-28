@@ -4,7 +4,7 @@ import { useSplitApi } from '../hooks/useApi'
 
 const Home = memo(() => {
   const navigate = useNavigate()
-  const { createSplit, loading, error, clearError } = useSplitApi()
+  const { createSplit, loading, clearError } = useSplitApi()
 
   const handleCreateSplit = async () => {
     try {

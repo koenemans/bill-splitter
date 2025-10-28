@@ -1,13 +1,13 @@
-import { memo, Fragment } from 'react'
+import { Fragment, memo } from 'react'
 import PropTypes from 'prop-types'
 
 const SettlementDisplay = memo(({ settlement }) => {
-  if (!settlement) return null
+  if (!settlement) {return null}
 
   return (
     <div className="bg-white rounded-2xl shadow-xl p-6 mb-6">
       <h2 className="text-2xl font-bold text-gray-900 mb-4">Settlement</h2>
-      
+
       <div className="grid grid-cols-2 gap-4 mb-6">
         <div className="bg-blue-50 rounded-lg p-4">
           <div className="text-sm text-gray-600">Total Amount</div>

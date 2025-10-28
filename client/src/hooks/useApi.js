@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useCallback, useState } from 'react';
 
 // Custom hook for API operations following React rules
 export const useApi = () => {
@@ -8,7 +8,7 @@ export const useApi = () => {
   const apiCall = useCallback(async (url, options = {}) => {
     setLoading(true);
     setError(null);
-    
+
     try {
       const response = await fetch(url, {
         headers: {

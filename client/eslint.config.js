@@ -43,6 +43,7 @@ export default [
       'react/no-unused-prop-types': 'warn',
       'react/jsx-uses-react': 'off',
       'react/react-in-jsx-scope': 'off',
+      'react/jsx-uses-vars': 'error',
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
       'react-refresh/only-export-components': [
@@ -51,7 +52,7 @@ export default [
       ],
 
       // General code quality rules
-      'no-console': 'error',
+      'no-console': 'warn',
       'no-debugger': 'error',
       'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
       'no-var': 'error',

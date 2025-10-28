@@ -75,8 +75,8 @@ const splits = new Map();
 const handleValidationErrors = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.status(400).json({ 
-      error: 'Validation failed', 
+    return res.status(400).json({
+      error: 'Validation failed',
       details: errors.array().map(err => err.msg)
     });
   }
@@ -97,14 +97,13 @@ setInterval(() => {
       splits.delete(id);
       console.log(`Deleted expired split: ${id}`);
     }
-  },
-  60 * 60 * 1000
-);
+  }
+}, 60 * 60 * 1000);
 
 // API Routes using Express Router
 
 // Create a new split
-apiRouter.post('/splits', asyncHandler(async (req, res) => {
+apiRouter.post('/splits', asyncHandler((req, res) => {
   // Security: Use longer nanoid for better security
   const id = nanoid(12);
   const split = {
@@ -118,10 +117,10 @@ apiRouter.post('/splits', asyncHandler(async (req, res) => {
 }));
 
 // Get split details
-apiRouter.get('/splits/:id', 
+apiRouter.get('/splits/:id',
   param('id').isLength({ min: 12, max: 12 }).withMessage('Invalid split ID'),
   handleValidationErrors,
-  asyncHandler(async (req, res) => {
+  asyncHandler((req, res) => {
     const split = splits.get(req.params.id);
     if (!split) {
       return res.status(404).json({ error: 'Split not found' });
@@ -138,7 +137,7 @@ apiRouter.post('/splits/:id/participants',
     .notEmpty().withMessage('Name is required')
     .isLength({ max: config.limits.maxNameLength }).withMessage(`Name must be under ${config.limits.maxNameLength} characters`),
   handleValidationErrors,
-  asyncHandler(async (req, res) => {
+  asyncHandler((req, res) => {
     const split = splits.get(req.params.id);
     if (!split) {
       return res.status(404).json({ error: 'Split not found' });
@@ -174,7 +173,7 @@ apiRouter.post('/splits/:id/expenses',
   body('amount')
     .isFloat({ min: 0.01, max: config.limits.maxAmount }).withMessage(`Amount must be between 0.01 and ${config.limits.maxAmount}`),
   handleValidationErrors,
-  asyncHandler(async (req, res) => {
+  asyncHandler((req, res) => {
     const split = splits.get(req.params.id);
     if (!split) {
       return res.status(404).json({ error: 'Split not found' });
@@ -186,7 +185,7 @@ apiRouter.post('/splits/:id/expenses',
     }
 
     const { participantId, description, amount } = req.body;
-    
+
     const participant = split.participants.find(p => p.id === participantId);
     if (!participant) {
       return res.status(404).json({ error: 'Participant not found' });
@@ -211,7 +210,7 @@ apiRouter.delete('/splits/:id/expenses/:expenseId',
   param('id').isLength({ min: 12, max: 12 }).withMessage('Invalid split ID'),
   param('expenseId').isLength({ min: 10, max: 10 }).withMessage('Invalid expense ID'),
   handleValidationErrors,
-  asyncHandler(async (req, res) => {
+  asyncHandler((req, res) => {
     const split = splits.get(req.params.id);
     if (!split) {
       return res.status(404).json({ error: 'Split not found' });
@@ -232,7 +231,7 @@ apiRouter.patch('/splits/:id/participants/:participantId/done',
   param('id').isLength({ min: 12, max: 12 }).withMessage('Invalid split ID'),
   param('participantId').isLength({ min: 10, max: 10 }).withMessage('Invalid participant ID'),
   handleValidationErrors,
-  asyncHandler(async (req, res) => {
+  asyncHandler((req, res) => {
     const split = splits.get(req.params.id);
     if (!split) {
       return res.status(404).json({ error: 'Split not found' });
@@ -255,7 +254,7 @@ apiRouter.patch('/splits/:id/participants/:participantId/reset',
   param('id').isLength({ min: 12, max: 12 }).withMessage('Invalid split ID'),
   param('participantId').isLength({ min: 10, max: 10 }).withMessage('Invalid participant ID'),
   handleValidationErrors,
-  asyncHandler(async (req, res) => {
+  asyncHandler((req, res) => {
     const split = splits.get(req.params.id);
     if (!split) {
       return res.status(404).json({ error: 'Split not found' });
@@ -277,20 +276,20 @@ apiRouter.patch('/splits/:id/participants/:participantId/reset',
 apiRouter.get('/splits/:id/settlement',
   param('id').isLength({ min: 12, max: 12 }).withMessage('Invalid split ID'),
   handleValidationErrors,
-  asyncHandler(async (req, res) => {
+  asyncHandler((req, res) => {
     const split = splits.get(req.params.id);
     if (!split) {
       return res.status(404).json({ error: 'Split not found' });
     }
 
     // Check if all participants are done
-    const allDone = split.participants.length > 0 && 
+    const allDone = split.participants.length > 0 &&
                     split.participants.every(p => p.isDone);
 
     if (!allDone) {
-      return res.json({ 
-        ready: false, 
-        message: 'Not all participants are done yet' 
+      return res.json({
+        ready: false,
+        message: 'Not all participants are done yet'
       });
     }
 
@@ -387,12 +386,12 @@ apiRouter.get('/health', (req, res) => {
 app.use('/api', apiRouter);
 
 // Centralized error handler middleware (must be last)
-app.use((error, req, res, next) => {
+app.use((error, req, res, _next) => {
   console.error('Server error:', error);
-  
+
   // Don't expose internal error details in production
   const message = isProduction() ? 'Internal server error' : error.message;
-  
+
   res.status(error.status || 500).json({
     error: message,
     ...(isProduction() ? {} : { stack: error.stack })
