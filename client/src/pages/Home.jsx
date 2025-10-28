@@ -1,31 +1,19 @@
-import { useState } from 'react';
+import { memo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useSplitApi } from '../hooks/useApi';
 
-function Home() {
-  const [loading, setLoading] = useState(false);
+const Home = memo(() => {
   const navigate = useNavigate();
+  const { createSplit, loading, clearError } = useSplitApi();
 
-  const createSplit = async () => {
-    setLoading(true);
+  const handleCreateSplit = async () => {
     try {
-      const response = await fetch('/api/splits', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
-      if (response.ok) {
-        const data = await response.json();
-        navigate(`/split/${data.id}`);
-      } else {
-        const error = await response.json();
-        alert(error.error || 'Failed to create split. Please try again.');
-      }
-    } catch (error) {
-      console.error('Error creating split:', error);
-      alert(
-        'Failed to create split. Please check your connection and try again.'
-      );
-    } finally {
-      setLoading(false);
+      clearError();
+      const data = await createSplit();
+      navigate(`/split/${data.id}`);
+    } catch (err) {
+      console.error('Error creating split:', err);
+      alert(err.message || 'Failed to create split. Please try again.');
     }
   };
 
@@ -105,7 +93,7 @@ function Home() {
           </div>
 
           <button
-            onClick={createSplit}
+            onClick={handleCreateSplit}
             disabled={loading}
             className='w-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold py-3 px-6 rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed'
           >
@@ -115,6 +103,8 @@ function Home() {
       </div>
     </div>
   );
-}
+});
+
+Home.displayName = 'Home';
 
 export default Home;

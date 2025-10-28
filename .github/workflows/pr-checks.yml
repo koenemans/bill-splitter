@@ -213,9 +213,6 @@ jobs:
           path: client/dist/
           retention-days: 7
 
-      - name: Install size-limit
-        run: npm install --no-save size-limit @size-limit/file
-
       - name: Check bundle size
         run: npx size-limit
 

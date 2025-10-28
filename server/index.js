@@ -6,15 +6,40 @@ import helmet from 'helmet';
 import xss from 'xss';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { body, param, validationResult } from 'express-validator';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Configuration
+const config = {
+  port: process.env.PORT || 3001,
+  nodeEnv: process.env.NODE_ENV || 'development',
+  allowedOrigin: process.env.ALLOWED_ORIGIN || 'http://localhost:5173',
+  limits: {
+    maxParticipants: 50,
+    maxExpenses: 500,
+    maxNameLength: 100,
+    maxDescriptionLength: 200,
+    maxAmount: 1000000,
+    requestBodySize: '10kb',
+  },
+  rateLimit: {
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // requests per window
+  },
+  splitExpiryMs: 7 * 24 * 60 * 60 * 1000, // 7 days
+};
+
+const isProduction = () => config.nodeEnv === 'production';
+
 const app = express();
-const PORT = process.env.PORT || 3001;
+const apiRouter = express.Router();
+
+// Middleware setup following proper order: security, body parsers, custom middleware, routes, error handlers
 
 // Security: HTTPS redirect in production
-if (process.env.NODE_ENV === 'production') {
+if (isProduction()) {
   app.use((req, res, next) => {
     if (req.headers['x-forwarded-proto'] !== 'https') {
       return res.redirect(`https://${req.headers.host}${req.url}`);
@@ -29,18 +54,18 @@ app.use(helmet());
 // Security: CORS with restricted origins
 app.use(
   cors({
-    origin: process.env.ALLOWED_ORIGIN || 'http://localhost:5173',
+    origin: config.allowedOrigin,
     credentials: true,
   })
 );
 
-// Security: Request body size limit
-app.use(express.json({ limit: '10kb' }));
+// Body parsers
+app.use(express.json({ limit: config.limits.requestBodySize }));
 
 // Security: Rate limiting
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
+  windowMs: config.rateLimit.windowMs,
+  max: config.rateLimit.max,
   message: 'Too many requests from this IP, please try again later.',
 });
 app.use('/api/', limiter);
@@ -48,13 +73,22 @@ app.use('/api/', limiter);
 // In-memory storage
 const splits = new Map();
 
-// Constants for limits
-const MAX_PARTICIPANTS = 50;
-const MAX_EXPENSES = 500;
-const MAX_NAME_LENGTH = 100;
-const MAX_DESCRIPTION_LENGTH = 200;
-const MAX_AMOUNT = 1000000;
-const SPLIT_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+// Validation middleware
+const handleValidationErrors = (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({
+      error: 'Validation failed',
+      details: errors.array().map(err => err.msg),
+    });
+  }
+  next();
+};
+
+// Async error handler wrapper
+const asyncHandler = fn => (req, res, next) => {
+  Promise.resolve(fn(req, res, next)).catch(next);
+};
 
 // Security: Clean up old splits every hour
 setInterval(
@@ -62,7 +96,7 @@ setInterval(
     const now = new Date();
     for (const [id, split] of splits.entries()) {
       const age = now - new Date(split.createdAt);
-      if (age > SPLIT_EXPIRY_MS) {
+      if (age > config.splitExpiryMs) {
         splits.delete(id);
         console.log(`Deleted expired split: ${id}`);
       }
@@ -71,9 +105,12 @@ setInterval(
   60 * 60 * 1000
 );
 
+// API Routes using Express Router
+
 // Create a new split
-app.post('/api/splits', (req, res) => {
-  try {
+apiRouter.post(
+  '/splits',
+  asyncHandler((req, res) => {
     // Security: Use longer nanoid for better security
     const id = nanoid(12);
     const split = {
@@ -83,111 +120,95 @@ app.post('/api/splits', (req, res) => {
       expenses: [],
     };
     splits.set(id, split);
-    res.json({ id });
-  } catch (error) {
-    console.error('Error creating split:', error);
-    res.status(500).json({ error: 'Failed to create split' });
-  }
-});
+    res.status(201).json({ id });
+  })
+);
 
 // Get split details
-app.get('/api/splits/:id', (req, res) => {
-  try {
+apiRouter.get(
+  '/splits/:id',
+  param('id').isLength({ min: 12, max: 12 }).withMessage('Invalid split ID'),
+  handleValidationErrors,
+  asyncHandler((req, res) => {
     const split = splits.get(req.params.id);
     if (!split) {
       return res.status(404).json({ error: 'Split not found' });
     }
     res.json(split);
-  } catch (error) {
-    console.error('Error getting split:', error);
-    res.status(500).json({ error: 'Failed to retrieve split' });
-  }
-});
+  })
+);
 
 // Add participant
-app.post('/api/splits/:id/participants', (req, res) => {
-  try {
+apiRouter.post(
+  '/splits/:id/participants',
+  param('id').isLength({ min: 12, max: 12 }).withMessage('Invalid split ID'),
+  body('name')
+    .trim()
+    .notEmpty()
+    .withMessage('Name is required')
+    .isLength({ max: config.limits.maxNameLength })
+    .withMessage(
+      `Name must be under ${config.limits.maxNameLength} characters`
+    ),
+  handleValidationErrors,
+  asyncHandler((req, res) => {
     const split = splits.get(req.params.id);
     if (!split) {
       return res.status(404).json({ error: 'Split not found' });
     }
 
     // Security: Check participant limit
-    if (split.participants.length >= MAX_PARTICIPANTS) {
-      return res
-        .status(400)
-        .json({ error: `Maximum ${MAX_PARTICIPANTS} participants allowed` });
+    if (split.participants.length >= config.limits.maxParticipants) {
+      return res.status(400).json({
+        error: `Maximum ${config.limits.maxParticipants} participants allowed`,
+      });
     }
 
     const { name } = req.body;
-
-    // Security: Validate name
-    if (!name || typeof name !== 'string' || name.trim() === '') {
-      return res.status(400).json({ error: 'Name is required' });
-    }
-
-    if (name.length > MAX_NAME_LENGTH) {
-      return res
-        .status(400)
-        .json({ error: `Name must be under ${MAX_NAME_LENGTH} characters` });
-    }
-
     const participantId = nanoid(10);
     const participant = {
       id: participantId,
       // Security: Sanitize name to prevent XSS
-      name: xss(name.trim()),
+      name: xss(name),
       isDone: false,
     };
 
     split.participants.push(participant);
-    res.json(participant);
-  } catch (error) {
-    console.error('Error adding participant:', error);
-    res.status(500).json({ error: 'Failed to add participant' });
-  }
-});
+    res.status(201).json(participant);
+  })
+);
 
 // Add expense
-app.post('/api/splits/:id/expenses', (req, res) => {
-  try {
+apiRouter.post(
+  '/splits/:id/expenses',
+  param('id').isLength({ min: 12, max: 12 }).withMessage('Invalid split ID'),
+  body('participantId').notEmpty().withMessage('Participant ID is required'),
+  body('description')
+    .trim()
+    .notEmpty()
+    .withMessage('Description is required')
+    .isLength({ max: config.limits.maxDescriptionLength })
+    .withMessage(
+      `Description must be under ${config.limits.maxDescriptionLength} characters`
+    ),
+  body('amount')
+    .isFloat({ min: 0.01, max: config.limits.maxAmount })
+    .withMessage(`Amount must be between 0.01 and ${config.limits.maxAmount}`),
+  handleValidationErrors,
+  asyncHandler((req, res) => {
     const split = splits.get(req.params.id);
     if (!split) {
       return res.status(404).json({ error: 'Split not found' });
     }
 
     // Security: Check expense limit
-    if (split.expenses.length >= MAX_EXPENSES) {
-      return res
-        .status(400)
-        .json({ error: `Maximum ${MAX_EXPENSES} expenses allowed` });
-    }
-
-    const { participantId, description, amount } = req.body;
-
-    // Security: Validate required fields
-    if (!participantId || !description || amount === undefined) {
-      return res.status(400).json({ error: 'Missing required fields' });
-    }
-
-    // Security: Validate description
-    if (typeof description !== 'string' || description.trim() === '') {
-      return res.status(400).json({ error: 'Description is required' });
-    }
-
-    if (description.length > MAX_DESCRIPTION_LENGTH) {
+    if (split.expenses.length >= config.limits.maxExpenses) {
       return res.status(400).json({
-        error: `Description must be under ${MAX_DESCRIPTION_LENGTH} characters`,
+        error: `Maximum ${config.limits.maxExpenses} expenses allowed`,
       });
     }
 
-    // Security: Validate amount
-    const parsedAmount = parseFloat(amount);
-    if (isNaN(parsedAmount) || parsedAmount <= 0 || parsedAmount > MAX_AMOUNT) {
-      return res
-        .status(400)
-        .json({ error: 'Invalid amount. Must be between 0 and 1,000,000' });
-    }
+    const { participantId, description, amount } = req.body;
 
     const participant = split.participants.find(p => p.id === participantId);
     if (!participant) {
@@ -199,21 +220,24 @@ app.post('/api/splits/:id/expenses', (req, res) => {
       id: expenseId,
       participantId,
       // Security: Sanitize description to prevent XSS
-      description: xss(description.trim()),
-      amount: parsedAmount,
+      description: xss(description),
+      amount: parseFloat(amount),
     };
 
     split.expenses.push(expense);
-    res.json(expense);
-  } catch (error) {
-    console.error('Error adding expense:', error);
-    res.status(500).json({ error: 'Failed to add expense' });
-  }
-});
+    res.status(201).json(expense);
+  })
+);
 
 // Delete expense
-app.delete('/api/splits/:id/expenses/:expenseId', (req, res) => {
-  try {
+apiRouter.delete(
+  '/splits/:id/expenses/:expenseId',
+  param('id').isLength({ min: 12, max: 12 }).withMessage('Invalid split ID'),
+  param('expenseId')
+    .isLength({ min: 10, max: 10 })
+    .withMessage('Invalid expense ID'),
+  handleValidationErrors,
+  asyncHandler((req, res) => {
     const split = splits.get(req.params.id);
     if (!split) {
       return res.status(404).json({ error: 'Split not found' });
@@ -225,16 +249,19 @@ app.delete('/api/splits/:id/expenses/:expenseId', (req, res) => {
     }
 
     split.expenses.splice(index, 1);
-    res.json({ success: true });
-  } catch (error) {
-    console.error('Error deleting expense:', error);
-    res.status(500).json({ error: 'Failed to delete expense' });
-  }
-});
+    res.status(204).send();
+  })
+);
 
 // Mark participant as done
-app.patch('/api/splits/:id/participants/:participantId/done', (req, res) => {
-  try {
+apiRouter.patch(
+  '/splits/:id/participants/:participantId/done',
+  param('id').isLength({ min: 12, max: 12 }).withMessage('Invalid split ID'),
+  param('participantId')
+    .isLength({ min: 10, max: 10 })
+    .withMessage('Invalid participant ID'),
+  handleValidationErrors,
+  asyncHandler((req, res) => {
     const split = splits.get(req.params.id);
     if (!split) {
       return res.status(404).json({ error: 'Split not found' });
@@ -249,15 +276,18 @@ app.patch('/api/splits/:id/participants/:participantId/done', (req, res) => {
 
     participant.isDone = true;
     res.json(participant);
-  } catch (error) {
-    console.error('Error marking participant as done:', error);
-    res.status(500).json({ error: 'Failed to update participant' });
-  }
-});
+  })
+);
 
 // Reset participant done status
-app.patch('/api/splits/:id/participants/:participantId/reset', (req, res) => {
-  try {
+apiRouter.patch(
+  '/splits/:id/participants/:participantId/reset',
+  param('id').isLength({ min: 12, max: 12 }).withMessage('Invalid split ID'),
+  param('participantId')
+    .isLength({ min: 10, max: 10 })
+    .withMessage('Invalid participant ID'),
+  handleValidationErrors,
+  asyncHandler((req, res) => {
     const split = splits.get(req.params.id);
     if (!split) {
       return res.status(404).json({ error: 'Split not found' });
@@ -272,15 +302,15 @@ app.patch('/api/splits/:id/participants/:participantId/reset', (req, res) => {
 
     participant.isDone = false;
     res.json(participant);
-  } catch (error) {
-    console.error('Error resetting participant:', error);
-    res.status(500).json({ error: 'Failed to reset participant' });
-  }
-});
+  })
+);
 
 // Calculate settlement
-app.get('/api/splits/:id/settlement', (req, res) => {
-  try {
+apiRouter.get(
+  '/splits/:id/settlement',
+  param('id').isLength({ min: 12, max: 12 }).withMessage('Invalid split ID'),
+  handleValidationErrors,
+  asyncHandler((req, res) => {
     const split = splits.get(req.params.id);
     if (!split) {
       return res.status(404).json({ error: 'Split not found' });
@@ -378,21 +408,34 @@ app.get('/api/splits/:id/settlement', (req, res) => {
       balances: originalBalances,
       transactions,
     });
-  } catch (error) {
-    console.error('Error calculating settlement:', error);
-    res.status(500).json({ error: 'Failed to calculate settlement' });
-  }
-});
+  })
+);
 
 // Health check endpoint for Docker and deployment platforms
-app.get('/api/health', (req, res) => {
+apiRouter.get('/health', (req, res) => {
   res
     .status(200)
     .json({ status: 'healthy', timestamp: new Date().toISOString() });
 });
 
+// Mount API router
+app.use('/api', apiRouter);
+
+// Centralized error handler middleware (must be last)
+app.use((error, req, res, _next) => {
+  console.error('Server error:', error);
+
+  // Don't expose internal error details in production
+  const message = isProduction() ? 'Internal server error' : error.message;
+
+  res.status(error.status || 500).json({
+    error: message,
+    ...(isProduction() ? {} : { stack: error.stack }),
+  });
+});
+
 // Serve static files in production
-if (process.env.NODE_ENV === 'production') {
+if (isProduction()) {
   app.use(express.static(path.join(__dirname, 'public')));
 
   // Catch all handler: send back React's index.html file for client-side routing
@@ -401,7 +444,7 @@ if (process.env.NODE_ENV === 'production') {
   });
 }
 
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+app.listen(config.port, () => {
+  console.log(`Server running on http://localhost:${config.port}`);
+  console.log(`Environment: ${config.nodeEnv}`);
 });

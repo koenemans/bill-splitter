@@ -20,9 +20,12 @@
     "deploy": "npm run build && npm run start"
   },
   "devDependencies": {
+    "@size-limit/preset-app": "^11.1.4",
+    "@size-limit/webpack": "^11.1.4",
     "concurrently": "^8.2.2",
     "eslint": "^9.38.0",
-    "prettier": "^3.6.2"
+    "prettier": "^3.6.2",
+    "size-limit": "^11.1.4"
   },
   "engines": {
     "node": ">=18.0.0",
