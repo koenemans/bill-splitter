@@ -10,3 +10,22 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/* Mobile-specific optimizations */
+@media (max-width: 640px) {
+  /* Improve touch targets on mobile */
+  button,
+  input,
+  select,
+  textarea {
+    min-height: 44px;
+  }
+
+  /* Prevent zoom on input focus on iOS */
+  input[type='text'],
+  input[type='number'],
+  input[type='email'],
+  input[type='password'] {
+    font-size: 16px;
+  }
+}

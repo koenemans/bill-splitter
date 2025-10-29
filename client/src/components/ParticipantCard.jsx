@@ -4,20 +4,22 @@ import PropTypes from 'prop-types';
 const ParticipantCard = memo(({ participant, onReset }) => {
   return (
     <div
-      className={`p-3 rounded-lg border-2 ${
+      className={`p-3 sm:p-4 rounded-lg border-2 ${
         participant.isDone
           ? 'border-green-500 bg-green-50'
           : 'border-gray-200 bg-gray-50'
       }`}
     >
-      <div className='font-medium text-gray-900'>{participant.name}</div>
-      <div className='text-xs text-gray-600'>
+      <div className='font-medium text-gray-900 text-sm sm:text-base truncate'>
+        {participant.name}
+      </div>
+      <div className='text-xs sm:text-sm text-gray-600 mt-1'>
         {participant.isDone ? '✓ Done' : 'Adding expenses...'}
       </div>
       {participant.isDone && (
         <button
           onClick={() => onReset(participant.id)}
-          className='mt-2 w-full text-xs px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors'
+          className='mt-2 w-full text-xs sm:text-sm px-2 py-1 sm:py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors touch-manipulation'
         >
           Reset
         </button>

@@ -119,28 +119,49 @@ describe('ExpenseItem Component', () => {
   test('should have correct styling classes', () => {
     render(<ExpenseItem expense={mockExpense} onDelete={mockOnDelete} />);
 
-    // Check main container styling
+    // Check main container styling (updated for responsive design)
     const container = screen.getByText('Dinner at restaurant').closest('div');
     expect(container).toHaveClass(
       'flex',
-      'justify-between',
-      'items-center',
+      'flex-col',
+      'sm:flex-row',
+      'sm:justify-between',
+      'sm:items-center',
       'p-3',
       'bg-gray-50',
-      'rounded-lg'
+      'rounded-lg',
+      'gap-2',
+      'sm:gap-3'
     );
 
-    // Check description styling
+    // Check description styling (updated for responsive design)
     const description = screen.getByText('Dinner at restaurant');
-    expect(description).toHaveClass('font-medium', 'text-gray-900');
+    expect(description).toHaveClass(
+      'font-medium',
+      'text-gray-900',
+      'text-sm',
+      'sm:text-base',
+      'truncate',
+      'flex-1'
+    );
 
-    // Check amount styling
+    // Check amount styling (updated for responsive design)
     const amount = screen.getByText('€25.50');
-    expect(amount).toHaveClass('font-semibold', 'text-gray-900');
+    expect(amount).toHaveClass(
+      'font-semibold',
+      'text-gray-900',
+      'text-sm',
+      'sm:text-base'
+    );
 
-    // Check delete button styling
+    // Check delete button styling (updated for responsive design)
     const deleteButton = screen.getByLabelText('Delete expense');
-    expect(deleteButton).toHaveClass('text-red-500', 'hover:text-red-700');
+    expect(deleteButton).toHaveClass(
+      'text-red-500',
+      'hover:text-red-700',
+      'p-1',
+      'touch-manipulation'
+    );
   });
 
   test('should render delete icon SVG', () => {
@@ -150,7 +171,7 @@ describe('ExpenseItem Component', () => {
     const svg = deleteButton.querySelector('svg');
 
     expect(svg).toBeInTheDocument();
-    expect(svg).toHaveClass('w-5', 'h-5');
+    expect(svg).toHaveClass('w-4', 'h-4', 'sm:w-5', 'sm:h-5');
   });
 
   test('should be accessible', () => {
@@ -163,12 +184,18 @@ describe('ExpenseItem Component', () => {
   test('should maintain layout structure', () => {
     render(<ExpenseItem expense={mockExpense} onDelete={mockOnDelete} />);
 
-    // Check that the amount and delete button are in the same container
+    // Check that the amount and delete button are in the same container (updated for responsive design)
     const rightSection = screen.getByText('€25.50').closest('div');
     const deleteButton = screen.getByLabelText('Delete expense');
 
     expect(rightSection).toContainElement(deleteButton);
-    expect(rightSection).toHaveClass('flex', 'items-center', 'gap-3');
+    expect(rightSection).toHaveClass(
+      'flex',
+      'items-center',
+      'justify-between',
+      'sm:justify-end',
+      'gap-3'
+    );
   });
 
   test('should handle zero amount', () => {

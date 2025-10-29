@@ -216,22 +216,24 @@ const Split = memo(() => {
   }
 
   return (
-    <div className='min-h-screen p-4 py-8'>
+    <div className='min-h-screen p-3 sm:p-4 py-6 sm:py-8'>
       <div className='max-w-4xl mx-auto'>
         {/* Header */}
-        <div className='bg-white rounded-2xl shadow-xl p-6 mb-6'>
-          <h1 className='text-2xl font-bold text-gray-900 mb-4'>Bill Split</h1>
+        <div className='bg-white rounded-2xl shadow-xl p-4 sm:p-6 mb-4 sm:mb-6'>
+          <h1 className='text-xl sm:text-2xl font-bold text-gray-900 mb-3 sm:mb-4'>
+            Bill Split
+          </h1>
 
-          <div className='flex gap-2'>
+          <div className='flex flex-col sm:flex-row gap-2 sm:gap-3'>
             <input
               type='text'
               value={shareUrl}
               readOnly
-              className='flex-1 px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-sm'
+              className='flex-1 px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg bg-gray-50 text-xs sm:text-sm'
             />
             <button
               onClick={copyLink}
-              className='px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors'
+              className='px-4 sm:px-6 py-2 sm:py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium touch-manipulation whitespace-nowrap'
             >
               Copy Link
             </button>
@@ -242,15 +244,17 @@ const Split = memo(() => {
         <SettlementDisplay settlement={settlement} />
 
         {/* Participants */}
-        <div className='bg-white rounded-2xl shadow-xl p-6 mb-6'>
-          <h2 className='text-xl font-bold text-gray-900 mb-4'>Participants</h2>
+        <div className='bg-white rounded-2xl shadow-xl p-4 sm:p-6 mb-4 sm:mb-6'>
+          <h2 className='text-lg sm:text-xl font-bold text-gray-900 mb-3 sm:mb-4'>
+            Participants
+          </h2>
 
           {split.participants.length === 0 ? (
-            <p className='text-gray-500 text-center py-4'>
+            <p className='text-gray-500 text-center py-4 text-sm sm:text-base'>
               No participants yet
             </p>
           ) : (
-            <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3'>
+            <div className='grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-3'>
               {split.participants.map(p => (
                 <ParticipantCard
                   key={p.id}
@@ -264,41 +268,44 @@ const Split = memo(() => {
 
         {/* Add Participant or Expenses */}
         {!currentParticipant ? (
-          <div className='bg-white rounded-2xl shadow-xl p-6'>
-            <h2 className='text-xl font-bold text-gray-900 mb-4'>
+          <div className='bg-white rounded-2xl shadow-xl p-4 sm:p-6'>
+            <h2 className='text-lg sm:text-xl font-bold text-gray-900 mb-3 sm:mb-4'>
               Join the Split
             </h2>
-            <form onSubmit={handleAddParticipant} className='flex gap-3'>
+            <form
+              onSubmit={handleAddParticipant}
+              className='flex flex-col sm:flex-row gap-3'
+            >
               <input
                 type='text'
                 value={name}
                 onChange={e => setName(e.target.value)}
                 placeholder='Enter your name'
-                className='flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500'
+                className='flex-1 px-3 sm:px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base'
                 required
               />
               <button
                 type='submit'
-                className='px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all'
+                className='px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all text-sm sm:text-base touch-manipulation whitespace-nowrap'
               >
                 Join
               </button>
             </form>
           </div>
         ) : (
-          <div className='bg-white rounded-2xl shadow-xl p-6'>
-            <div className='flex justify-between items-center mb-4'>
-              <h2 className='text-xl font-bold text-gray-900'>
+          <div className='bg-white rounded-2xl shadow-xl p-4 sm:p-6'>
+            <div className='flex flex-col sm:flex-row sm:justify-between sm:items-center mb-3 sm:mb-4 gap-2'>
+              <h2 className='text-lg sm:text-xl font-bold text-gray-900'>
                 {currentParticipant.name}'s Expenses
               </h2>
-              <div className='text-lg font-semibold text-indigo-600'>
+              <div className='text-base sm:text-lg font-semibold text-indigo-600'>
                 Total: €{myTotal.toFixed(2)}
               </div>
             </div>
 
             {/* Expense List */}
             {myExpenses.length > 0 && (
-              <div className='mb-6 space-y-2'>
+              <div className='mb-4 sm:mb-6 space-y-2'>
                 {myExpenses.map(expense => (
                   <ExpenseItem
                     key={expense.id}
@@ -317,25 +324,27 @@ const Split = memo(() => {
                   value={description}
                   onChange={e => setDescription(e.target.value)}
                   placeholder='Description'
-                  className='sm:col-span-2 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500'
+                  className='sm:col-span-2 px-3 sm:px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base'
                   required
                 />
                 <div className='relative'>
-                  <span className='absolute left-3 top-3 text-gray-500'>€</span>
+                  <span className='absolute left-3 top-3 text-gray-500 text-sm sm:text-base'>
+                    €
+                  </span>
                   <input
                     type='number'
                     step='0.01'
                     value={amount}
                     onChange={e => setAmount(e.target.value)}
                     placeholder='0.00'
-                    className='w-full pl-8 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500'
+                    className='w-full pl-7 sm:pl-8 pr-3 sm:pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base'
                     required
                   />
                 </div>
               </div>
               <button
                 type='submit'
-                className='w-full mt-3 px-6 py-3 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600 transition-colors'
+                className='w-full mt-3 px-6 py-3 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600 transition-colors text-sm sm:text-base touch-manipulation'
               >
                 Add Expense
               </button>
@@ -344,7 +353,7 @@ const Split = memo(() => {
             {/* Done Button */}
             <button
               onClick={handleMarkDone}
-              className='w-full px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold rounded-lg hover:from-green-600 hover:to-emerald-700 transition-all shadow-lg'
+              className='w-full px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold rounded-lg hover:from-green-600 hover:to-emerald-700 transition-all shadow-lg text-sm sm:text-base touch-manipulation'
             >
               I'm Done Adding Expenses
             </button>
