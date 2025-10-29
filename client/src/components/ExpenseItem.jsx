@@ -3,19 +3,21 @@ import PropTypes from 'prop-types';
 
 const ExpenseItem = memo(({ expense, onDelete }) => {
   return (
-    <div className='flex justify-between items-center p-3 bg-gray-50 rounded-lg'>
-      <span className='font-medium text-gray-900'>{expense.description}</span>
-      <div className='flex items-center gap-3'>
-        <span className='font-semibold text-gray-900'>
+    <div className='flex flex-col sm:flex-row sm:justify-between sm:items-center p-3 bg-gray-50 rounded-lg gap-2 sm:gap-3'>
+      <span className='font-medium text-gray-900 text-sm sm:text-base truncate flex-1'>
+        {expense.description}
+      </span>
+      <div className='flex items-center justify-between sm:justify-end gap-3'>
+        <span className='font-semibold text-gray-900 text-sm sm:text-base'>
           €{expense.amount.toFixed(2)}
         </span>
         <button
           onClick={() => onDelete(expense.id)}
-          className='text-red-500 hover:text-red-700'
+          className='text-red-500 hover:text-red-700 p-1 touch-manipulation'
           aria-label='Delete expense'
         >
           <svg
-            className='w-5 h-5'
+            className='w-4 h-4 sm:w-5 sm:h-5'
             fill='none'
             stroke='currentColor'
             viewBox='0 0 24 24'
