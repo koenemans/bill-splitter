@@ -60,7 +60,7 @@ export const useSplit = splitId => {
     } finally {
       setLoading(false);
     }
-  }, [splitId, getSplit]);
+  }, [splitId, getSplit, pollingInterval]);
 
   // Load settlement data
   const loadSettlement = useCallback(async () => {

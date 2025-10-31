@@ -14,6 +14,7 @@ import {
   logSystemMetrics,
   requestLoggingMiddleware,
 } from './utils/logger.js';
+import { anonymizeParticipantName } from './utils/anonymizer.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -378,7 +379,7 @@ apiRouter.post(
     req.logger.expenseAdded(req.params.id, amount, description, {
       expenseId,
       participantId,
-      participantName: participant.name,
+      participantName: anonymizeParticipantName(participant.name),
       totalExpenses: split.expenses.length,
     });
 

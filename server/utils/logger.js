@@ -1,4 +1,11 @@
 import winston from 'winston';
+import {
+  anonymizeExpenseDescription,
+  anonymizeIpAddress,
+  anonymizeParticipantName,
+  anonymizeQueryParams,
+  anonymizeUserAgent,
+} from './anonymizer.js';
 
 // Custom format for structured logging
 const logFormat = winston.format.combine(
@@ -85,7 +92,7 @@ const createContextualLogger = (context = {}) => {
         ...context,
         ...meta,
         splitId,
-        participantName,
+        participantName: anonymizeParticipantName(participantName),
         event: 'participant_added',
       });
     },
@@ -96,7 +103,7 @@ const createContextualLogger = (context = {}) => {
         ...meta,
         splitId,
         amount,
-        description,
+        description: anonymizeExpenseDescription(description),
         event: 'expense_added',
       });
     },
@@ -145,11 +152,11 @@ const correlationMiddleware = (req, res, next) => {
   req.correlationId = correlationId;
   res.setHeader('x-correlation-id', correlationId);
 
-  // Add correlation context to logger
+  // Add correlation context to logger with anonymized data
   req.logger = createContextualLogger({
     correlationId,
-    userAgent: req.headers['user-agent'],
-    ip: req.ip || req.connection.remoteAddress,
+    userAgent: anonymizeUserAgent(req.headers['user-agent']),
+    ip: anonymizeIpAddress(req.ip || req.connection.remoteAddress),
   });
 
   next();
@@ -159,11 +166,11 @@ const correlationMiddleware = (req, res, next) => {
 const requestLoggingMiddleware = (req, res, next) => {
   const startTime = Date.now();
 
-  // Log incoming request
+  // Log incoming request with anonymized query parameters
   req.logger.info('Incoming request', {
     method: req.method,
     url: req.url,
-    query: req.query,
+    query: anonymizeQueryParams(req.query),
     event: 'request_start',
   });
 

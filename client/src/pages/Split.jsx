@@ -3,6 +3,10 @@ import { useParams } from 'react-router-dom';
 import { useSplit } from '../hooks/useSplit';
 import { useSplitApi } from '../hooks/useApi';
 import { logger } from '../utils/logger';
+import {
+  anonymizeExpenseDescription,
+  anonymizeParticipantName,
+} from '../utils/anonymizer';
 import { useParticipant } from '../hooks/useParticipant';
 import SettlementDisplay from '../components/SettlementDisplay';
 import ParticipantCard from '../components/ParticipantCard';
@@ -50,7 +54,7 @@ const Split = memo(() => {
       try {
         logger.userAction('add_participant', 'form_submit', {
           splitId: id,
-          participantName: name,
+          participantName: anonymizeParticipantName(name),
         });
         const participant = await addParticipant(id, name);
         logger.participantAdded(id, name, { participantId: participant.id });
@@ -60,7 +64,7 @@ const Split = memo(() => {
       } catch (err) {
         logger.apiError('add_participant', err, {
           splitId: id,
-          participantName: name,
+          participantName: anonymizeParticipantName(name),
         });
         alert(err.message || 'Failed to add participant. Please try again.');
       }
@@ -80,12 +84,12 @@ const Split = memo(() => {
           splitId: id,
           participantId: currentParticipant.id,
           amount: parseFloat(amount),
-          description,
+          description: anonymizeExpenseDescription(description),
         });
         await addExpense(id, currentParticipant.id, description, amount);
         logger.expenseAdded(id, amount, description, {
           participantId: currentParticipant.id,
-          participantName: currentParticipant.name,
+          participantName: anonymizeParticipantName(currentParticipant.name),
         });
         setDescription('');
         setAmount('');
@@ -95,7 +99,7 @@ const Split = memo(() => {
           splitId: id,
           participantId: currentParticipant.id,
           amount,
-          description,
+          description: anonymizeExpenseDescription(description),
         });
         alert(err.message || 'Failed to add expense. Please try again.');
       }
@@ -134,13 +138,13 @@ const Split = memo(() => {
       logger.userAction('mark_done', 'button_click', {
         splitId: id,
         participantId: currentParticipant.id,
-        participantName: currentParticipant.name,
+        participantName: anonymizeParticipantName(currentParticipant.name),
       });
       await markParticipantDone(id, currentParticipant.id);
       logger.info('Participant marked as done', {
         splitId: id,
         participantId: currentParticipant.id,
-        participantName: currentParticipant.name,
+        participantName: anonymizeParticipantName(currentParticipant.name),
         event: 'participant_done',
       });
       clearParticipant();
@@ -171,7 +175,7 @@ const Split = memo(() => {
         logger.info('Participant reset', {
           splitId: id,
           participantId,
-          participantName: participant.name,
+          participantName: anonymizeParticipantName(participant.name),
           event: 'participant_reset',
         });
         saveParticipant(participant);
