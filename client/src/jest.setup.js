@@ -5,7 +5,6 @@ Object.defineProperty(globalThis, 'import', {
       env: {
         DEV: false,
         MODE: 'test',
-        VITE_APPLICATIONINSIGHTS_CONNECTION_STRING: undefined,
       },
     },
   },
