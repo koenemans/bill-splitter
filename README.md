@@ -26,14 +26,15 @@ The app will run on:
 - Automatic calculation when everyone is done
 - Euro currency only
 - Production-ready deployment configuration
+- Anonymized logging
 
 ## 🏗 Project Structure
 
 ```
 bill-splitter/
-├── client/                 # React frontend
-├── server/                 # Express.js backend
-├── Dockerfile             # Docker container configuration
+├── client/               # React frontend
+├── server/               # Express.js backend
+├── Dockerfile            # Docker container configuration
 ├── deploy.json           # Deployment configuration
 ├── web.config            # Windows App Service (optional)
 └── package.json          # Monorepo orchestrator
@@ -41,22 +42,75 @@ bill-splitter/
 
 ## 🛠 Development Commands
 
+### Root Commands (Monorepo)
+
 ```bash
-npm run dev          # Start both client and server
-npm run client:dev   # Start only the client
-npm run server:dev   # Start only the server
-npm run build        # Build for production
-npm test             # Run tests
-npm run lint         # Run linting
-npm run format       # Format code
+# Development
+npm run dev              # Start both client and server
+npm run client:dev       # Start only the client
+npm run server:dev       # Start only the server
+
+# Building & Production
+npm run build            # Build client for production
+npm start                # Start server in production
+npm run server:start     # Start server in production
+npm run client:build     # Build only the client
+
+# Testing
+npm test                 # Run all tests (server + client)
+npm run test:coverage    # Run tests with coverage report
+
+# Code Quality
+npm run lint             # Run linting on both projects
+npm run lint:fix         # Fix linting issues automatically
+npm run format           # Format code with Prettier
+npm run format:check     # Check code formatting
+
+# Setup
+npm run install:all      # Install dependencies for all projects
 ```
 
 ### Server Commands
 
 ```bash
 cd server
-npm start            # Start server in production
-npm run dev          # Start server in development mode
+
+# Development
+npm run dev              # Start server in development mode
+npm start                # Start server in production
+
+# Testing
+npm test                 # Run server tests
+npm run test:watch       # Run tests in watch mode
+npm run test:coverage    # Run tests with coverage
+
+# Code Quality
+npm run lint             # Lint server code
+npm run lint:fix         # Fix linting issues
+npm run format           # Format server code
+npm run format:check     # Check server code formatting
+```
+
+### Client Commands
+
+```bash
+cd client
+
+# Development
+npm run dev              # Start Vite dev server
+npm run build            # Build for production
+npm run preview          # Preview production build
+
+# Testing
+npm test                 # Run client tests
+npm run test:watch       # Run tests in watch mode
+npm run test:coverage    # Run tests with coverage
+
+# Code Quality
+npm run lint             # Lint client code
+npm run lint:fix         # Fix linting issues
+npm run format           # Format client code
+npm run format:check     # Check client code formatting
 ```
 
 ## 🐳 Docker Deployment
