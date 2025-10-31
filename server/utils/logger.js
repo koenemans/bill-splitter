@@ -1,4 +1,30 @@
 import winston from 'winston';
+import fs from 'fs';
+import path from 'path';
+import {
+  anonymizeExpenseDescription,
+  anonymizeIpAddress,
+  anonymizeParticipantName,
+  anonymizeQueryParams,
+  anonymizeUserAgent,
+} from './anonymizer.js';
+
+// Ensure logs directory exists
+const ensureLogsDirectory = async () => {
+  try {
+    const logsDir = path.join(process.cwd(), 'logs');
+    try {
+      await fs.promises.access(logsDir);
+    } catch {
+      await fs.promises.mkdir(logsDir, { recursive: true });
+    }
+    return true;
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.warn('Warning: Could not create logs directory:', error.message);
+    return false;
+  }
+};
 
 // Custom format for structured logging
 const logFormat = winston.format.combine(
@@ -43,22 +69,55 @@ const logger = winston.createLogger({
   ],
 });
 
-// File transport for production logging
-if (process.env.NODE_ENV === 'production') {
-  logger.add(
-    new winston.transports.File({
-      filename: 'logs/error.log',
-      level: 'error',
-      format: logFormat,
-    })
-  );
-  logger.add(
-    new winston.transports.File({
-      filename: 'logs/combined.log',
-      format: logFormat,
-    })
-  );
-}
+// File transport for production logging - initialize asynchronously
+const initializeFileTransports = async () => {
+  if (process.env.NODE_ENV === 'production') {
+    const canCreateLogs = await ensureLogsDirectory();
+
+    if (canCreateLogs) {
+      try {
+        logger.add(
+          new winston.transports.File({
+            filename: 'logs/error.log',
+            level: 'error',
+            format: logFormat,
+            handleExceptions: true,
+            handleRejections: true,
+          })
+        );
+        logger.add(
+          new winston.transports.File({
+            filename: 'logs/combined.log',
+            format: logFormat,
+            handleExceptions: true,
+            handleRejections: true,
+          })
+        );
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.warn(
+          'Warning: Could not initialize file transports:',
+          error.message
+        );
+        // eslint-disable-next-line no-console
+        console.warn('Continuing with console logging only');
+      }
+    } else {
+      // eslint-disable-next-line no-console
+      console.warn(
+        'Warning: File logging disabled due to filesystem constraints'
+      );
+      // eslint-disable-next-line no-console
+      console.warn('Continuing with console logging only');
+    }
+  }
+};
+
+// Initialize file transports asynchronously
+initializeFileTransports().catch(error => {
+  // eslint-disable-next-line no-console
+  console.error('Failed to initialize file transports:', error.message);
+});
 
 // Enhanced logging methods with context
 const createContextualLogger = (context = {}) => {
@@ -85,7 +144,7 @@ const createContextualLogger = (context = {}) => {
         ...context,
         ...meta,
         splitId,
-        participantName,
+        participantName: anonymizeParticipantName(participantName),
         event: 'participant_added',
       });
     },
@@ -96,7 +155,7 @@ const createContextualLogger = (context = {}) => {
         ...meta,
         splitId,
         amount,
-        description,
+        description: anonymizeExpenseDescription(description),
         event: 'expense_added',
       });
     },
@@ -145,11 +204,11 @@ const correlationMiddleware = (req, res, next) => {
   req.correlationId = correlationId;
   res.setHeader('x-correlation-id', correlationId);
 
-  // Add correlation context to logger
+  // Add correlation context to logger with anonymized data
   req.logger = createContextualLogger({
     correlationId,
-    userAgent: req.headers['user-agent'],
-    ip: req.ip || req.connection.remoteAddress,
+    userAgent: anonymizeUserAgent(req.headers['user-agent']),
+    ip: anonymizeIpAddress(req.ip || req.connection.remoteAddress),
   });
 
   next();
@@ -159,11 +218,11 @@ const correlationMiddleware = (req, res, next) => {
 const requestLoggingMiddleware = (req, res, next) => {
   const startTime = Date.now();
 
-  // Log incoming request
+  // Log incoming request with anonymized query parameters
   req.logger.info('Incoming request', {
     method: req.method,
     url: req.url,
-    query: req.query,
+    query: anonymizeQueryParams(req.query),
     event: 'request_start',
   });
 

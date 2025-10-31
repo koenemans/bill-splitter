@@ -1,4 +1,8 @@
 // Simple client-side logging without external dependencies
+import {
+  anonymizeExpenseDescription,
+  anonymizeParticipantName,
+} from './anonymizer.js';
 
 // Log levels
 const LogLevel = {
@@ -43,6 +47,7 @@ const log = (level, message, meta = {}) => {
           : 'log';
 
   // Console logging
+  // eslint-disable-next-line no-console
   console[consoleMethod](
     `[${logEntry.level}] ${logEntry.timestamp} - ${message}`,
     meta
@@ -64,7 +69,7 @@ const logger = {
   participantAdded: (splitId, participantName, meta = {}) => {
     logger.info('Participant added', {
       splitId,
-      participantName,
+      participantName: anonymizeParticipantName(participantName),
       event: 'participant_added',
       ...meta,
     });
@@ -74,7 +79,7 @@ const logger = {
     logger.info('Expense added', {
       splitId,
       amount,
-      description,
+      description: anonymizeExpenseDescription(description),
       event: 'expense_added',
       ...meta,
     });
