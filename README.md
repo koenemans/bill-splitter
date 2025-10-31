@@ -27,20 +27,6 @@ The app will run on:
 - Euro currency only
 - Production-ready deployment configuration
 
-## 📚 Documentation
-
-**All detailed documentation has been moved to the [GitHub Wiki](../../wiki).**
-
-### Quick Links
-
-- **[Getting Started](../../wiki/Getting-Started)** - Installation and setup
-- **[Development Guide](../../wiki/Development-Guide)** - Development workflow and standards
-- **[Testing Documentation](../../wiki/Testing-Documentation)** - Test suite and coverage
-- **[Deployment Guide](../../wiki/Deployment-Guide)** - Production deployment
-- **[Security Features](../../wiki/Security-Features)** - Security measures and best practices
-- **[API Documentation](../../wiki/API-Documentation)** - REST API endpoints
-- **[Coding Standards](../../wiki/Coding-Standards)** - Code quality guidelines
-
 ## 🏗 Project Structure
 
 ```
@@ -121,10 +107,6 @@ The application includes comprehensive logging:
 - **Log levels**: DEBUG, INFO, WARN, ERROR (configurable via `LOG_LEVEL` environment variable)
 
 All API requests, errors, business events, and system metrics are automatically logged.
-
-## 🤝 Contributing
-
-Please refer to our [Development Guide](../../wiki/Development-Guide) and [Coding Standards](../../wiki/Coding-Standards) in the wiki for detailed information on contributing to this project.
 
 ## 📄 License
 
