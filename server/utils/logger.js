@@ -1,4 +1,6 @@
 import winston from 'winston';
+import fs from 'fs';
+import path from 'path';
 import {
   anonymizeExpenseDescription,
   anonymizeIpAddress,
@@ -6,6 +8,23 @@ import {
   anonymizeQueryParams,
   anonymizeUserAgent,
 } from './anonymizer.js';
+
+// Ensure logs directory exists
+const ensureLogsDirectory = async () => {
+  try {
+    const logsDir = path.join(process.cwd(), 'logs');
+    try {
+      await fs.promises.access(logsDir);
+    } catch {
+      await fs.promises.mkdir(logsDir, { recursive: true });
+    }
+    return true;
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.warn('Warning: Could not create logs directory:', error.message);
+    return false;
+  }
+};
 
 // Custom format for structured logging
 const logFormat = winston.format.combine(
@@ -50,22 +69,55 @@ const logger = winston.createLogger({
   ],
 });
 
-// File transport for production logging
-if (process.env.NODE_ENV === 'production') {
-  logger.add(
-    new winston.transports.File({
-      filename: 'logs/error.log',
-      level: 'error',
-      format: logFormat,
-    })
-  );
-  logger.add(
-    new winston.transports.File({
-      filename: 'logs/combined.log',
-      format: logFormat,
-    })
-  );
-}
+// File transport for production logging - initialize asynchronously
+const initializeFileTransports = async () => {
+  if (process.env.NODE_ENV === 'production') {
+    const canCreateLogs = await ensureLogsDirectory();
+
+    if (canCreateLogs) {
+      try {
+        logger.add(
+          new winston.transports.File({
+            filename: 'logs/error.log',
+            level: 'error',
+            format: logFormat,
+            handleExceptions: true,
+            handleRejections: true,
+          })
+        );
+        logger.add(
+          new winston.transports.File({
+            filename: 'logs/combined.log',
+            format: logFormat,
+            handleExceptions: true,
+            handleRejections: true,
+          })
+        );
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.warn(
+          'Warning: Could not initialize file transports:',
+          error.message
+        );
+        // eslint-disable-next-line no-console
+        console.warn('Continuing with console logging only');
+      }
+    } else {
+      // eslint-disable-next-line no-console
+      console.warn(
+        'Warning: File logging disabled due to filesystem constraints'
+      );
+      // eslint-disable-next-line no-console
+      console.warn('Continuing with console logging only');
+    }
+  }
+};
+
+// Initialize file transports asynchronously
+initializeFileTransports().catch(error => {
+  // eslint-disable-next-line no-console
+  console.error('Failed to initialize file transports:', error.message);
+});
 
 // Enhanced logging methods with context
 const createContextualLogger = (context = {}) => {

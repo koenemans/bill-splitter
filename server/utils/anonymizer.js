@@ -5,9 +5,6 @@ import crypto from 'crypto';
  * Ensures no personal information is exposed in logs
  */
 
-// Cache for consistent anonymization within a session
-const anonymizationCache = new Map();
-
 /**
  * Creates a consistent hash for anonymization
  * @param {string} value - The value to anonymize
@@ -19,25 +16,14 @@ const createAnonymousHash = (value, salt = 'bill-splitter-log') => {
     return '[INVALID]';
   }
 
-  // Check cache first for consistency
-  const cacheKey = `${salt}:${value}`;
-  if (anonymizationCache.has(cacheKey)) {
-    return anonymizationCache.get(cacheKey);
-  }
-
-  // Create hash
+  // Create deterministic hash - no cache needed since crypto.createHash is deterministic
   const hash = crypto
     .createHash('sha256')
     .update(`${salt}:${value}`)
     .digest('hex')
     .substring(0, 8);
 
-  const anonymized = `anon_${hash}`;
-
-  // Cache for consistency
-  anonymizationCache.set(cacheKey, anonymized);
-
-  return anonymized;
+  return `anon_${hash}`;
 };
 
 /**
@@ -147,22 +133,4 @@ export const anonymizeQueryParams = query => {
   }
 
   return anonymized;
-};
-
-/**
- * Clears the anonymization cache (useful for testing or memory management)
- */
-export const clearAnonymizationCache = () => {
-  anonymizationCache.clear();
-};
-
-/**
- * Gets cache statistics for monitoring
- * @returns {Object} - Cache statistics
- */
-export const getCacheStats = () => {
-  return {
-    size: anonymizationCache.size,
-    keys: Array.from(anonymizationCache.keys()).length,
-  };
 };

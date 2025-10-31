@@ -2,15 +2,9 @@ import {
   anonymizeExpenseDescription,
   anonymizeParticipantName,
   anonymizeValue,
-  clearAnonymizationCache,
-  getCacheStats,
 } from '../utils/anonymizer.js';
 
 describe('Client Anonymizer Utilities', () => {
-  beforeEach(() => {
-    clearAnonymizationCache();
-  });
-
   describe('anonymizeParticipantName', () => {
     test('should anonymize participant names consistently', () => {
       const name = 'Jane Smith';
@@ -82,41 +76,6 @@ describe('Client Anonymizer Utilities', () => {
       const type2Anon = anonymizeValue(value, 'type2');
 
       expect(type1Anon).not.toBe(type2Anon);
-    });
-  });
-
-  describe('cache functionality', () => {
-    test('should maintain cache consistency', () => {
-      const name = 'Test User';
-
-      // First call
-      const result1 = anonymizeParticipantName(name);
-      const stats1 = getCacheStats();
-
-      // Second call should use cache
-      const result2 = anonymizeParticipantName(name);
-      const stats2 = getCacheStats();
-
-      expect(result1).toBe(result2);
-      expect(stats1.size).toBe(1);
-      expect(stats2.size).toBe(1); // Should not increase
-    });
-
-    test('should clear cache properly', () => {
-      anonymizeParticipantName('Test');
-      expect(getCacheStats().size).toBe(1);
-
-      clearAnonymizationCache();
-      expect(getCacheStats().size).toBe(0);
-    });
-
-    test('should handle multiple different values in cache', () => {
-      anonymizeParticipantName('User1');
-      anonymizeParticipantName('User2');
-      anonymizeExpenseDescription('Expense1');
-
-      const stats = getCacheStats();
-      expect(stats.size).toBe(3);
     });
   });
 

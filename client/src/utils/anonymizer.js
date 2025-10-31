@@ -3,9 +3,6 @@
  * Ensures no personal information is exposed in client logs
  */
 
-// Cache for consistent anonymization within a session
-const anonymizationCache = new Map();
-
 /**
  * Creates a simple hash for anonymization (client-side compatible)
  * @param {string} value - The value to anonymize
@@ -17,13 +14,8 @@ const createAnonymousHash = (value, salt = 'bill-splitter-client') => {
     return '[INVALID]';
   }
 
-  // Check cache first for consistency
-  const cacheKey = `${salt}:${value}`;
-  if (anonymizationCache.has(cacheKey)) {
-    return anonymizationCache.get(cacheKey);
-  }
-
-  // Simple hash implementation for client-side (no crypto module)
+  // Simple deterministic hash implementation for client-side (no crypto module)
+  // No cache needed since the hash function is deterministic
   let hash = 0;
   const input = `${salt}:${value}`;
 
@@ -33,12 +25,7 @@ const createAnonymousHash = (value, salt = 'bill-splitter-client') => {
     hash = hash & hash; // Convert to 32-bit integer
   }
 
-  const anonymized = `anon_${Math.abs(hash).toString(16).substring(0, 8)}`;
-
-  // Cache for consistency
-  anonymizationCache.set(cacheKey, anonymized);
-
-  return anonymized;
+  return `anon_${Math.abs(hash).toString(16).substring(0, 8)}`;
 };
 
 /**
@@ -73,22 +60,4 @@ export const anonymizeExpenseDescription = description => {
  */
 export const anonymizeValue = (value, type = 'generic') => {
   return createAnonymousHash(value, type);
-};
-
-/**
- * Clears the anonymization cache (useful for testing)
- */
-export const clearAnonymizationCache = () => {
-  anonymizationCache.clear();
-};
-
-/**
- * Gets cache statistics for monitoring
- * @returns {Object} - Cache statistics
- */
-export const getCacheStats = () => {
-  return {
-    size: anonymizationCache.size,
-    keys: Array.from(anonymizationCache.keys()).length,
-  };
 };
