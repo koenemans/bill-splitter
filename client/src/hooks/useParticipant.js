@@ -11,8 +11,8 @@ export const useParticipant = splitId => {
     if (splitId) {
       const savedParticipantId = localStorage.getItem(storageKey);
       if (savedParticipantId) {
-        // Return the saved ID to be used by parent component to find participant
-        return savedParticipantId;
+        // Note: savedParticipantId is available but not used in this effect
+        // It's meant to be used by parent component via restoreParticipant
       }
     }
   }, [splitId, storageKey]);

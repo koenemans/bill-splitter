@@ -6,7 +6,7 @@ import {
   jest,
   test,
 } from '@jest/globals';
-import { LogLevel, logErrorBoundary, logger } from '../utils/logger';
+import { logErrorBoundary, logger, LogLevel } from '../utils/logger';
 
 describe('Client Logger', () => {
   let mockConsole;
@@ -48,8 +48,10 @@ describe('Client Logger', () => {
 
       // Debug logs might be filtered out in test environment
       // Just test that the function doesn't throw
-      expect(() => logger.debug('Debug message', { extra: 'data' })).not.toThrow();
-      
+      expect(() =>
+        logger.debug('Debug message', { extra: 'data' })
+      ).not.toThrow();
+
       // Restore environment
       if (originalEnv && global.import?.meta?.env) {
         global.import.meta.env = originalEnv;

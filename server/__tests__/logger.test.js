@@ -41,7 +41,7 @@ describe('Logger Utilities', () => {
 
       // Test that the logger functions exist
       expect(typeof contextLogger.info).toBe('function');
-      
+
       // Test basic functionality without complex mocking
       contextLogger.info('test message', { extra: 'data' });
       // The actual Winston logger will handle the output
