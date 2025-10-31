@@ -49,7 +49,7 @@ bill-splitter/
 ├── server/                 # Express.js backend
 ├── Dockerfile             # Docker container configuration
 ├── deploy.json           # Deployment configuration
-├── web.config            # Azure Windows App Service (optional)
+├── web.config            # Windows App Service (optional)
 └── package.json          # Monorepo orchestrator
 ```
 
@@ -101,37 +101,26 @@ services:
     restart: unless-stopped
 ```
 
-### Azure App Service Deployment
+### Cloud Deployment
 
-For Azure App Service on Linux:
+The application is designed to work with any cloud provider that supports Docker containers:
 
-- Use the Dockerfile for container deployment
-- Set startup command to: `npm start` (uses native Node.js process)
-- The `web.config` file is not needed for Linux App Service
+- **Docker**: Use the included Dockerfile for container deployment
+- **Startup command**: `npm start` (uses native Node.js process)
+- **Environment variables**: Configure as needed for your cloud provider
 
-**Process Management**: The application uses native Node.js processes. Azure App Service provides automatic restarts and process management.
+**Process Management**: The application uses native Node.js processes. Most cloud platforms provide automatic restarts and process management.
 
-### Application Insights Setup
+### Logging
 
-After your app deploys to Azure, follow these steps to enable logging and monitoring:
+The application includes comprehensive logging:
 
-1. **Create Application Insights** in Azure Portal
-   - Search "Application Insights" → Create
-   - Same resource group and region as your web app
+- **Development**: Console logging with colors and simple format
+- **Production**: File-based logging with structured JSON format
+- **Log files**: `logs/error.log` and `logs/combined.log` (created automatically)
+- **Log levels**: DEBUG, INFO, WARN, ERROR (configurable via `LOG_LEVEL` environment variable)
 
-2. **Get the connection string** from the Application Insights Overview page
-
-3. **Add to your Web App settings**:
-   - Go to Web App → Configuration → Application settings
-   - Add: `APPLICATIONINSIGHTS_CONNECTION_STRING` = your connection string
-   - Add: `VITE_APPLICATIONINSIGHTS_CONNECTION_STRING` = same connection string
-   - Save and restart the web app
-
-4. **Test it works**:
-   - Use your app for a few minutes
-   - Check Application Insights → Live Metrics for activity
-
-Your app will automatically track API requests, errors, user actions, and business events.
+All API requests, errors, business events, and system metrics are automatically logged.
 
 ## 🤝 Contributing
 

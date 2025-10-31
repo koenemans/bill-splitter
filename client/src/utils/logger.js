@@ -1,52 +1,4 @@
-import { ApplicationInsights } from '@microsoft/applicationinsights-web';
-import { ReactPlugin } from '@microsoft/applicationinsights-react-js';
-
-// Initialize Application Insights
-let appInsights = null;
-let reactPlugin = null;
-
-const initializeAppInsights = () => {
-  const connectionString = import.meta?.env
-    ?.VITE_APPLICATIONINSIGHTS_CONNECTION_STRING;
-
-  if (connectionString) {
-    reactPlugin = new ReactPlugin();
-
-    appInsights = new ApplicationInsights({
-      config: {
-        connectionString,
-        extensions: [reactPlugin],
-        extensionConfig: {
-          [reactPlugin.identifier]: {
-            history: null, // Will be set when router is available
-          },
-        },
-        enableAutoRouteTracking: true,
-        enableCorsCorrelation: true,
-        enableRequestHeaderTracking: true,
-        enableResponseHeaderTracking: true,
-        enableAjaxErrorStatusText: true,
-        enableAjaxPerfTracking: true,
-        enableUnhandledPromiseRejectionTracking: true,
-        disableFetchTracking: false,
-        enableDebugExceptions: import.meta?.env?.DEV,
-      },
-    });
-
-    appInsights.loadAppInsights();
-
-    // Set user context
-    appInsights.setAuthenticatedUserContext(
-      `user-${Date.now()}`, // Anonymous user ID
-      null,
-      true
-    );
-  }
-
-  return { appInsights, reactPlugin };
-};
-
-const { appInsights: ai, reactPlugin: rp } = initializeAppInsights();
+// Simple client-side logging without external dependencies
 
 // Log levels
 const LogLevel = {
@@ -95,28 +47,6 @@ const log = (level, message, meta = {}) => {
     `[${logEntry.level}] ${logEntry.timestamp} - ${message}`,
     meta
   );
-
-  // Application Insights logging
-  if (ai) {
-    const severity =
-      level === LogLevel.ERROR
-        ? 3
-        : level === LogLevel.WARN
-          ? 2
-          : level === LogLevel.DEBUG
-            ? 0
-            : 1;
-
-    ai.trackTrace({
-      message,
-      severityLevel: severity,
-      properties: {
-        ...meta,
-        service: 'bill-splitter-client',
-        environment: import.meta?.env?.MODE,
-      },
-    });
-  }
 };
 
 // Logger interface
@@ -129,13 +59,6 @@ const logger = {
   // Business event tracking
   splitCreated: (splitId, meta = {}) => {
     logger.info('Split created', { splitId, event: 'split_created', ...meta });
-
-    if (ai) {
-      ai.trackEvent({
-        name: 'Split Created',
-        properties: { splitId, ...meta },
-      });
-    }
   },
 
   participantAdded: (splitId, participantName, meta = {}) => {
@@ -145,13 +68,6 @@ const logger = {
       event: 'participant_added',
       ...meta,
     });
-
-    if (ai) {
-      ai.trackEvent({
-        name: 'Participant Added',
-        properties: { splitId, participantName, ...meta },
-      });
-    }
   },
 
   expenseAdded: (splitId, amount, description, meta = {}) => {
@@ -162,14 +78,6 @@ const logger = {
       event: 'expense_added',
       ...meta,
     });
-
-    if (ai) {
-      ai.trackEvent({
-        name: 'Expense Added',
-        properties: { splitId, amount, description, ...meta },
-        measurements: { amount: parseFloat(amount) },
-      });
-    }
   },
 
   splitCompleted: (splitId, participantCount, totalAmount, meta = {}) => {
@@ -180,17 +88,6 @@ const logger = {
       event: 'split_completed',
       ...meta,
     });
-
-    if (ai) {
-      ai.trackEvent({
-        name: 'Split Completed',
-        properties: { splitId, ...meta },
-        measurements: {
-          participantCount,
-          totalAmount: parseFloat(totalAmount),
-        },
-      });
-    }
   },
 
   apiError: (operation, error, meta = {}) => {
@@ -203,13 +100,6 @@ const logger = {
     };
 
     logger.error(`API Error: ${operation}`, errorMeta);
-
-    if (ai) {
-      ai.trackException({
-        exception: error instanceof Error ? error : new Error(errorMessage),
-        properties: errorMeta,
-      });
-    }
   },
 
   pageView: (pageName, url, meta = {}) => {
@@ -219,14 +109,6 @@ const logger = {
       event: 'page_view',
       ...meta,
     });
-
-    if (ai) {
-      ai.trackPageView({
-        name: pageName,
-        uri: url,
-        properties: meta,
-      });
-    }
   },
 
   userAction: (action, target, meta = {}) => {
@@ -236,13 +118,6 @@ const logger = {
       event: 'user_action',
       ...meta,
     });
-
-    if (ai) {
-      ai.trackEvent({
-        name: 'User Action',
-        properties: { action, target, ...meta },
-      });
-    }
   },
 
   performanceMetric: (name, duration, meta = {}) => {
@@ -252,14 +127,6 @@ const logger = {
       event: 'performance_metric',
       ...meta,
     });
-
-    if (ai) {
-      ai.trackMetric({
-        name,
-        average: duration,
-        properties: meta,
-      });
-    }
   },
 };
 
@@ -271,16 +138,6 @@ const logErrorBoundary = (error, errorInfo, componentStack) => {
     componentStack,
     event: 'error_boundary',
   });
-
-  if (ai) {
-    ai.trackException({
-      exception: error,
-      properties: {
-        componentStack,
-        errorBoundary: true,
-      },
-    });
-  }
 };
 
 // Performance observer for Core Web Vitals
@@ -351,5 +208,3 @@ if (typeof window !== 'undefined') {
 }
 
 export { logger, logErrorBoundary, LogLevel };
-
-export { ai as appInsights, rp as reactPlugin };

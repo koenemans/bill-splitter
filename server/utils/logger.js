@@ -1,28 +1,4 @@
 import winston from 'winston';
-import appInsights from 'applicationinsights';
-
-// Initialize Application Insights if connection string is provided
-const initializeAppInsights = () => {
-  const connectionString = process.env.APPLICATIONINSIGHTS_CONNECTION_STRING;
-  if (connectionString) {
-    appInsights
-      .setup(connectionString)
-      .setAutoDependencyCorrelation(true)
-      .setAutoCollectRequests(true)
-      .setAutoCollectPerformance(true, true)
-      .setAutoCollectExceptions(true)
-      .setAutoCollectDependencies(true)
-      .setAutoCollectConsole(true, true)
-      .setUseDiskRetryCaching(true)
-      .setSendLiveMetrics(true)
-      .start();
-
-    return appInsights.defaultClient;
-  }
-  return null;
-};
-
-const appInsightsClient = initializeAppInsights();
 
 // Custom format for structured logging
 const logFormat = winston.format.combine(
@@ -67,24 +43,21 @@ const logger = winston.createLogger({
   ],
 });
 
-// Add Application Insights transport if available
-if (appInsightsClient) {
-  try {
-    const { AzureApplicationInsightsLogger } = await import(
-      'winston-azure-application-insights'
-    );
-    logger.add(
-      new AzureApplicationInsightsLogger({
-        client: appInsightsClient,
-        level: 'info',
-      })
-    );
-  } catch (error) {
-    console.warn(
-      'Failed to initialize Application Insights transport:',
-      error.message
-    );
-  }
+// File transport for production logging
+if (process.env.NODE_ENV === 'production') {
+  logger.add(
+    new winston.transports.File({
+      filename: 'logs/error.log',
+      level: 'error',
+      format: logFormat,
+    })
+  );
+  logger.add(
+    new winston.transports.File({
+      filename: 'logs/combined.log',
+      format: logFormat,
+    })
+  );
 }
 
 // Enhanced logging methods with context
@@ -207,20 +180,15 @@ const requestLoggingMiddleware = (req, res, next) => {
       event: 'request_end',
     });
 
-    // Track performance metrics
-    if (appInsightsClient) {
-      appInsightsClient.trackRequest({
-        name: `${req.method} ${req.route?.path || req.url}`,
-        url: req.url,
-        duration,
-        resultCode: res.statusCode,
+    // Log performance metrics
+    req.logger.performanceMetric(
+      `${req.method} ${req.route?.path || req.url}`,
+      duration,
+      {
+        statusCode: res.statusCode,
         success: res.statusCode < 400,
-        properties: {
-          correlationId: req.correlationId,
-          userAgent: req.headers['user-agent'],
-        },
-      });
-    }
+      }
+    );
 
     originalEnd.apply(this, args);
   };
@@ -240,18 +208,6 @@ const errorLoggingMiddleware = (error, req, res, next) => {
     statusCode: error.status || 500,
     event: 'error',
   });
-
-  // Track exception in Application Insights
-  if (appInsightsClient) {
-    appInsightsClient.trackException({
-      exception: error,
-      properties: {
-        correlationId: req.correlationId,
-        method: req.method,
-        url: req.url,
-      },
-    });
-  }
 
   next(error);
 };
@@ -273,19 +229,6 @@ const logSystemMetrics = () => {
     uptime: process.uptime(),
     event: 'system_metrics',
   });
-
-  // Track custom metrics in Application Insights
-  if (appInsightsClient) {
-    appInsightsClient.trackMetric({
-      name: 'Memory Usage (MB)',
-      value: memUsageMB,
-    });
-
-    appInsightsClient.trackMetric({
-      name: 'Uptime (seconds)',
-      value: process.uptime(),
-    });
-  }
 };
 
 export {
@@ -295,5 +238,4 @@ export {
   requestLoggingMiddleware,
   errorLoggingMiddleware,
   logSystemMetrics,
-  appInsightsClient,
 };
