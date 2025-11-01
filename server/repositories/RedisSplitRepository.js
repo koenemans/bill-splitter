@@ -118,6 +118,8 @@ export class RedisSplitRepository extends SplitRepository {
       results;
 
     if (!existsResult[1]) {
+      // Split expired, clean up from active_splits set
+      await this.redis.srem(this.keys.activeSplits, id);
       return null;
     }
 
@@ -307,11 +309,52 @@ export class RedisSplitRepository extends SplitRepository {
   }
 
   /**
-   * Get count of active splits
+   * Get count of active splits with cleanup of expired splits
    */
   async getActiveSplitsCount() {
-    const count = await this.redis.scard(this.keys.activeSplits);
-    return count;
+    // Get all active split IDs
+    const activeSplitIds = await this.redis.smembers(this.keys.activeSplits);
+
+    if (activeSplitIds.length === 0) {
+      return 0;
+    }
+
+    // Check which splits still exist
+    const checkPipeline = this.redis.pipeline();
+    for (const splitId of activeSplitIds) {
+      checkPipeline.exists(this.keys.split(splitId));
+    }
+
+    const checkResults = await checkPipeline.exec();
+    this.validatePipelineResults(checkResults);
+
+    // Identify expired splits
+    const expiredSplitIds = [];
+    const existingSplitIds = [];
+
+    for (let i = 0; i < activeSplitIds.length; i++) {
+      const splitId = activeSplitIds[i];
+      const exists = checkResults[i][1];
+
+      if (exists) {
+        existingSplitIds.push(splitId);
+      } else {
+        expiredSplitIds.push(splitId);
+      }
+    }
+
+    // Clean up expired split IDs from active_splits set
+    if (expiredSplitIds.length > 0) {
+      await this.redis.srem(this.keys.activeSplits, ...expiredSplitIds);
+
+      logger.info('Cleaned up expired split IDs from active splits', {
+        expiredCount: expiredSplitIds.length,
+        remainingCount: existingSplitIds.length,
+        event: 'active_splits_cleanup',
+      });
+    }
+
+    return existingSplitIds.length;
   }
 
   /**

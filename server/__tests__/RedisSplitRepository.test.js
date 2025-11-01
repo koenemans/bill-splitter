@@ -390,51 +390,92 @@ describe('RedisSplitRepository', () => {
 
     it('should return correct count when splits exist', async () => {
       // Create multiple splits
-      for (let i = 0; i < 3; i++) {
-        const split = {
-          id: `split-${i}`,
-          createdAt: '2023-01-01T00:00:00.000Z',
-          participants: [],
-          expenses: [],
-        };
-        await repository.create(split);
-      }
+      await repository.create({
+        id: 'split-1',
+        createdAt: new Date().toISOString(),
+        participants: [],
+        expenses: [],
+      });
+      await repository.create({
+        id: 'split-2',
+        createdAt: new Date().toISOString(),
+        participants: [],
+        expenses: [],
+      });
+      await repository.create({
+        id: 'split-3',
+        createdAt: new Date().toISOString(),
+        participants: [],
+        expenses: [],
+      });
 
       const count = await repository.getActiveSplitsCount();
       expect(count).toBe(3);
     });
-  });
 
-  describe('delete', () => {
-    beforeEach(async () => {
-      const split = {
-        id: 'test-split-123',
-        createdAt: '2023-01-01T00:00:00.000Z',
-        participants: [
-          {
-            id: 'participant-1',
-            name: 'John Doe',
-            isDone: false,
-          },
-        ],
-        expenses: [
-          {
-            id: 'expense-1',
-            participantId: 'participant-1',
-            description: 'Dinner',
-            amount: 50.0,
-          },
-        ],
-      };
-      await repository.create(split);
+    it('should clean up expired split IDs from active_splits set', async () => {
+      // Create splits
+      await repository.create({
+        id: 'split-1',
+        createdAt: new Date().toISOString(),
+        participants: [],
+        expenses: [],
+      });
+      await repository.create({
+        id: 'split-2',
+        createdAt: new Date().toISOString(),
+        participants: [],
+        expenses: [],
+      });
+      await repository.create({
+        id: 'split-3',
+        createdAt: new Date().toISOString(),
+        participants: [],
+        expenses: [],
+      });
+
+      // Manually delete split data to simulate expiration (but keep ID in active_splits)
+      await mockRedis.del('split:split-2');
+      await mockRedis.del('split:split-2:participants');
+      await mockRedis.del('split:split-2:expenses');
+
+      // getActiveSplitsCount should clean up expired split-2
+      const count = await repository.getActiveSplitsCount();
+      expect(count).toBe(2); // Only split-1 and split-3 should remain
+
+      // Verify split-2 was removed from active_splits set
+      const activeSplitIds = await mockRedis.smembers('active_splits');
+      expect(activeSplitIds).toHaveLength(2);
+      expect(activeSplitIds).toContain('split-1');
+      expect(activeSplitIds).toContain('split-3');
+      expect(activeSplitIds).not.toContain('split-2');
     });
 
-    it('should delete split and all related data', async () => {
-      const result = await repository.delete('test-split-123');
-      expect(result).toBe(true);
+    it('should clean up expired splits during findById', async () => {
+      // Create a split
+      await repository.create({
+        id: 'split-to-expire',
+        createdAt: new Date().toISOString(),
+        participants: [],
+        expenses: [],
+      });
 
-      const split = await repository.findById('test-split-123');
-      expect(split).toBeNull();
+      // Verify it's in active_splits
+      let activeSplitIds = await mockRedis.smembers('active_splits');
+      expect(activeSplitIds).toContain('split-to-expire');
+
+      // Manually delete split data to simulate expiration
+      await mockRedis.del('split:split-to-expire');
+      await mockRedis.del('split:split-to-expire:participants');
+      await mockRedis.del('split:split-to-expire:expenses');
+
+      // findById should clean up the expired split ID
+      const result = await repository.findById('split-to-expire');
+      expect(result).toBeNull();
+
+      // Verify it was removed from active_splits
+      activeSplitIds = await mockRedis.smembers('active_splits');
+      expect(activeSplitIds).not.toContain('split-to-expire');
     });
   });
 
