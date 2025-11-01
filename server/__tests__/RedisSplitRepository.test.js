@@ -148,6 +148,13 @@ describe('RedisSplitRepository', () => {
       await expect(
         repository.addParticipant('test-split-123', extraParticipant)
       ).rejects.toThrow('Maximum 50 participants allowed');
+
+      // Verify the extra participant was NOT added to Redis
+      const split = await repository.findById('test-split-123');
+      expect(split.participants).toHaveLength(50);
+      expect(
+        split.participants.find(p => p.id === 'participant-51')
+      ).toBeUndefined();
     });
   });
 
@@ -218,6 +225,11 @@ describe('RedisSplitRepository', () => {
       await expect(
         repository.addExpense('test-split-123', extraExpense)
       ).rejects.toThrow('Maximum 500 expenses allowed');
+
+      // Verify the extra expense was NOT added to Redis
+      const split = await repository.findById('test-split-123');
+      expect(split.expenses).toHaveLength(500);
+      expect(split.expenses.find(e => e.id === 'expense-501')).toBeUndefined();
     });
   });
 

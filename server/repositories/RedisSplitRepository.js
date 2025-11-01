@@ -144,26 +144,33 @@ export class RedisSplitRepository extends SplitRepository {
     const splitKey = this.keys.split(splitId);
     const participantsKey = this.keys.participants(splitId);
 
+    // First check if split exists and get current count
     const pipeline = this.redis.pipeline();
     pipeline.exists(splitKey);
     pipeline.scard(participantsKey);
-    pipeline.sadd(participantsKey, JSON.stringify(participant));
-    pipeline.expire(participantsKey, this.ttlSeconds);
 
-    const results = await pipeline.exec();
-    this.validatePipelineResults(results);
+    const checkResults = await pipeline.exec();
+    this.validatePipelineResults(checkResults);
 
-    const [existsResult, countResult] = results;
+    const [existsResult, countResult] = checkResults;
 
     if (!existsResult[1]) {
       throw new Error('Split not found');
     }
 
-    // Check participant limit (50 as per config)
+    // Check participant limit BEFORE adding
     const maxParticipants = parseInt(process.env.MAX_PARTICIPANTS) || 50;
     if (countResult[1] >= maxParticipants) {
       throw new Error(`Maximum ${maxParticipants} participants allowed`);
     }
+
+    // Only add participant if within limits
+    const addPipeline = this.redis.pipeline();
+    addPipeline.sadd(participantsKey, JSON.stringify(participant));
+    addPipeline.expire(participantsKey, this.ttlSeconds);
+
+    const addResults = await addPipeline.exec();
+    this.validatePipelineResults(addResults);
 
     logger.info('Participant added to Redis', {
       splitId,
@@ -182,26 +189,33 @@ export class RedisSplitRepository extends SplitRepository {
     const splitKey = this.keys.split(splitId);
     const expensesKey = this.keys.expenses(splitId);
 
+    // First check if split exists and get current count
     const pipeline = this.redis.pipeline();
     pipeline.exists(splitKey);
     pipeline.scard(expensesKey);
-    pipeline.sadd(expensesKey, JSON.stringify(expense));
-    pipeline.expire(expensesKey, this.ttlSeconds);
 
-    const results = await pipeline.exec();
-    this.validatePipelineResults(results);
+    const checkResults = await pipeline.exec();
+    this.validatePipelineResults(checkResults);
 
-    const [existsResult, countResult] = results;
+    const [existsResult, countResult] = checkResults;
 
     if (!existsResult[1]) {
       throw new Error('Split not found');
     }
 
-    // Check expense limit (500 as per config)
+    // Check expense limit BEFORE adding
     const maxExpenses = parseInt(process.env.MAX_EXPENSES) || 500;
     if (countResult[1] >= maxExpenses) {
       throw new Error(`Maximum ${maxExpenses} expenses allowed`);
     }
+
+    // Only add expense if within limits
+    const addPipeline = this.redis.pipeline();
+    addPipeline.sadd(expensesKey, JSON.stringify(expense));
+    addPipeline.expire(expensesKey, this.ttlSeconds);
+
+    const addResults = await addPipeline.exec();
+    this.validatePipelineResults(addResults);
 
     logger.info('Expense added to Redis', {
       splitId,
