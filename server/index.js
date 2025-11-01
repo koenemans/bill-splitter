@@ -15,6 +15,7 @@ import {
   requestLoggingMiddleware,
 } from './utils/logger.js';
 import { anonymizeParticipantName } from './utils/anonymizer.js';
+import { RedisSplitRepository } from './repositories/RedisSplitRepository.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -60,9 +61,13 @@ const apiRouter = express.Router();
 
 // Middleware setup following proper order: security, body parsers, custom middleware, routes, error handlers
 
-// Security: HTTPS redirect in production
+// Security: HTTPS redirect in production (but not for local development)
 if (isProduction()) {
   app.use((req, res, next) => {
+    // Skip HTTPS redirect for localhost development
+    if (req.headers.host?.includes('localhost')) {
+      return next();
+    }
     if (req.headers['x-forwarded-proto'] !== 'https') {
       return res.redirect(`https://${req.headers.host}${req.url}`);
     }
@@ -88,8 +93,8 @@ app.use(express.json({ limit: config.limits.requestBodySize }));
 app.use(correlationMiddleware);
 app.use(requestLoggingMiddleware);
 
-// In-memory storage
-const splits = new Map();
+// Repository pattern with Redis backend
+const splitRepository = new RedisSplitRepository();
 
 // Global request counter for rate limiting
 let globalRequestCount = 0;
@@ -154,15 +159,16 @@ app.use('/api/', globalRateLimiter);
 let lastMemoryCheck = Date.now();
 const systemLogger = createContextualLogger({ component: 'system' });
 
-const checkMemoryUsage = () => {
+const checkMemoryUsage = async () => {
   const memUsage = process.memoryUsage();
   const memUsageMB = Math.round(memUsage.heapUsed / 1024 / 1024);
+  const activeSplitsCount = await splitRepository.getActiveSplitsCount();
 
   if (memUsageMB > config.memoryMonitoring.alertThresholdMB) {
     systemLogger.memoryAlert(
       memUsageMB,
       config.memoryMonitoring.alertThresholdMB,
-      splits.size
+      activeSplitsCount
     );
   }
 
@@ -170,7 +176,7 @@ const checkMemoryUsage = () => {
     // Log every minute
     systemLogger.info('System metrics', {
       memoryUsageMB: memUsageMB,
-      activeSplits: splits.size,
+      activeSplits: activeSplitsCount,
       event: 'periodic_metrics',
     });
     lastMemoryCheck = Date.now();
@@ -197,45 +203,21 @@ const asyncHandler = fn => (req, res, next) => {
   Promise.resolve(fn(req, res, next)).catch(next);
 };
 
-// Security: Clean up old splits every hour
-setInterval(
-  () => {
-    const now = new Date();
-    let deletedCount = 0;
-    for (const [id, split] of splits.entries()) {
-      const age = now - new Date(split.createdAt);
-      if (age > config.splitExpiryMs) {
-        splits.delete(id);
-        systemLogger.info('Split expired and deleted', {
-          splitId: id,
-          age: Math.round(age / 1000 / 60), // age in minutes
-          event: 'split_cleanup',
-        });
-        deletedCount++;
-      }
-    }
-
-    if (deletedCount > 0) {
-      systemLogger.info('Cleanup completed', {
-        deletedSplits: deletedCount,
-        remainingSplits: splits.size,
-        event: 'cleanup_summary',
-      });
-    }
-  },
-  60 * 60 * 1000
-);
+// Note: Redis handles automatic cleanup via TTL, so manual cleanup interval is no longer needed
+// Redis automatically removes expired keys based on the TTL set during creation
+// This reduces memory usage and eliminates the need for manual cleanup intervals
 
 // API Routes using Express Router
 
 // Create a new split
 apiRouter.post(
   '/splits',
-  asyncHandler((req, res) => {
+  asyncHandler(async (req, res) => {
     // Security: Check global split limit to prevent memory exhaustion
-    if (splits.size >= config.limits.maxTotalSplits) {
+    const currentSplitsCount = await splitRepository.getActiveSplitsCount();
+    if (currentSplitsCount >= config.limits.maxTotalSplits) {
       req.logger.warn('Split creation rejected - limit reached', {
-        currentSplits: splits.size,
+        currentSplits: currentSplitsCount,
         maxSplits: config.limits.maxTotalSplits,
         event: 'split_limit_reached',
       });
@@ -252,11 +234,11 @@ apiRouter.post(
       participants: [],
       expenses: [],
     };
-    splits.set(id, split);
+    await splitRepository.create(split);
 
     // Log split creation
     req.logger.splitCreated(id, {
-      totalActiveSplits: splits.size,
+      totalActiveSplits: await splitRepository.getActiveSplitsCount(),
     });
 
     // Check memory usage after creating split
@@ -271,8 +253,8 @@ apiRouter.get(
   '/splits/:id',
   param('id').isLength({ min: 12, max: 12 }).withMessage('Invalid split ID'),
   handleValidationErrors,
-  asyncHandler((req, res) => {
-    const split = splits.get(req.params.id);
+  asyncHandler(async (req, res) => {
+    const split = await splitRepository.findById(req.params.id);
     if (!split) {
       return res.status(404).json({ error: 'Split not found' });
     }
@@ -293,19 +275,7 @@ apiRouter.post(
       `Name must be under ${config.limits.maxNameLength} characters`
     ),
   handleValidationErrors,
-  asyncHandler((req, res) => {
-    const split = splits.get(req.params.id);
-    if (!split) {
-      return res.status(404).json({ error: 'Split not found' });
-    }
-
-    // Security: Check participant limit
-    if (split.participants.length >= config.limits.maxParticipants) {
-      return res.status(400).json({
-        error: `Maximum ${config.limits.maxParticipants} participants allowed`,
-      });
-    }
-
+  asyncHandler(async (req, res) => {
     const { name } = req.body;
     const participantId = nanoid(10);
     const participant = {
@@ -315,15 +285,29 @@ apiRouter.post(
       isDone: false,
     };
 
-    split.participants.push(participant);
+    try {
+      const addedParticipant = await splitRepository.addParticipant(
+        req.params.id,
+        participant
+      );
 
-    // Log participant addition
-    req.logger.participantAdded(req.params.id, name, {
-      participantId,
-      totalParticipants: split.participants.length,
-    });
+      // Log participant addition
+      req.logger.participantAdded(req.params.id, name, {
+        participantId,
+        totalParticipants: (await splitRepository.findById(req.params.id))
+          .participants.length,
+      });
 
-    res.status(201).json(participant);
+      res.status(201).json(addedParticipant);
+    } catch (error) {
+      if (error.message === 'Split not found') {
+        return res.status(404).json({ error: 'Split not found' });
+      }
+      if (error.message.includes('Maximum')) {
+        return res.status(400).json({ error: error.message });
+      }
+      throw error;
+    }
   })
 );
 
@@ -344,20 +328,14 @@ apiRouter.post(
     .isFloat({ min: 0.01, max: config.limits.maxAmount })
     .withMessage(`Amount must be between 0.01 and ${config.limits.maxAmount}`),
   handleValidationErrors,
-  asyncHandler((req, res) => {
-    const split = splits.get(req.params.id);
+  asyncHandler(async (req, res) => {
+    const { participantId, description, amount } = req.body;
+
+    // First check if split exists and participant is valid
+    const split = await splitRepository.findById(req.params.id);
     if (!split) {
       return res.status(404).json({ error: 'Split not found' });
     }
-
-    // Security: Check expense limit
-    if (split.expenses.length >= config.limits.maxExpenses) {
-      return res.status(400).json({
-        error: `Maximum ${config.limits.maxExpenses} expenses allowed`,
-      });
-    }
-
-    const { participantId, description, amount } = req.body;
 
     const participant = split.participants.find(p => p.id === participantId);
     if (!participant) {
@@ -373,17 +351,31 @@ apiRouter.post(
       amount: parseFloat(amount),
     };
 
-    split.expenses.push(expense);
+    try {
+      const addedExpense = await splitRepository.addExpense(
+        req.params.id,
+        expense
+      );
 
-    // Log expense addition
-    req.logger.expenseAdded(req.params.id, amount, description, {
-      expenseId,
-      participantId,
-      participantName: anonymizeParticipantName(participant.name),
-      totalExpenses: split.expenses.length,
-    });
+      // Log expense addition
+      req.logger.expenseAdded(req.params.id, amount, description, {
+        expenseId,
+        participantId,
+        participantName: anonymizeParticipantName(participant.name),
+        totalExpenses: (await splitRepository.findById(req.params.id)).expenses
+          .length,
+      });
 
-    res.status(201).json(expense);
+      res.status(201).json(addedExpense);
+    } catch (error) {
+      if (error.message === 'Split not found') {
+        return res.status(404).json({ error: 'Split not found' });
+      }
+      if (error.message.includes('Maximum')) {
+        return res.status(400).json({ error: error.message });
+      }
+      throw error;
+    }
   })
 );
 
@@ -395,19 +387,19 @@ apiRouter.delete(
     .isLength({ min: 10, max: 10 })
     .withMessage('Invalid expense ID'),
   handleValidationErrors,
-  asyncHandler((req, res) => {
-    const split = splits.get(req.params.id);
-    if (!split) {
-      return res.status(404).json({ error: 'Split not found' });
+  asyncHandler(async (req, res) => {
+    try {
+      await splitRepository.deleteExpense(req.params.id, req.params.expenseId);
+      res.status(204).send();
+    } catch (error) {
+      if (error.message === 'Split not found') {
+        return res.status(404).json({ error: 'Split not found' });
+      }
+      if (error.message === 'Expense not found') {
+        return res.status(404).json({ error: 'Expense not found' });
+      }
+      throw error;
     }
-
-    const index = split.expenses.findIndex(e => e.id === req.params.expenseId);
-    if (index === -1) {
-      return res.status(404).json({ error: 'Expense not found' });
-    }
-
-    split.expenses.splice(index, 1);
-    res.status(204).send();
   })
 );
 
@@ -419,21 +411,23 @@ apiRouter.patch(
     .isLength({ min: 10, max: 10 })
     .withMessage('Invalid participant ID'),
   handleValidationErrors,
-  asyncHandler((req, res) => {
-    const split = splits.get(req.params.id);
-    if (!split) {
-      return res.status(404).json({ error: 'Split not found' });
+  asyncHandler(async (req, res) => {
+    try {
+      const updatedParticipant = await splitRepository.updateParticipantStatus(
+        req.params.id,
+        req.params.participantId,
+        true
+      );
+      res.json(updatedParticipant);
+    } catch (error) {
+      if (error.message === 'Split not found') {
+        return res.status(404).json({ error: 'Split not found' });
+      }
+      if (error.message === 'Participant not found') {
+        return res.status(404).json({ error: 'Participant not found' });
+      }
+      throw error;
     }
-
-    const participant = split.participants.find(
-      p => p.id === req.params.participantId
-    );
-    if (!participant) {
-      return res.status(404).json({ error: 'Participant not found' });
-    }
-
-    participant.isDone = true;
-    res.json(participant);
   })
 );
 
@@ -445,21 +439,23 @@ apiRouter.patch(
     .isLength({ min: 10, max: 10 })
     .withMessage('Invalid participant ID'),
   handleValidationErrors,
-  asyncHandler((req, res) => {
-    const split = splits.get(req.params.id);
-    if (!split) {
-      return res.status(404).json({ error: 'Split not found' });
+  asyncHandler(async (req, res) => {
+    try {
+      const updatedParticipant = await splitRepository.updateParticipantStatus(
+        req.params.id,
+        req.params.participantId,
+        false
+      );
+      res.json(updatedParticipant);
+    } catch (error) {
+      if (error.message === 'Split not found') {
+        return res.status(404).json({ error: 'Split not found' });
+      }
+      if (error.message === 'Participant not found') {
+        return res.status(404).json({ error: 'Participant not found' });
+      }
+      throw error;
     }
-
-    const participant = split.participants.find(
-      p => p.id === req.params.participantId
-    );
-    if (!participant) {
-      return res.status(404).json({ error: 'Participant not found' });
-    }
-
-    participant.isDone = false;
-    res.json(participant);
   })
 );
 
@@ -468,8 +464,8 @@ apiRouter.get(
   '/splits/:id/settlement',
   param('id').isLength({ min: 12, max: 12 }).withMessage('Invalid split ID'),
   handleValidationErrors,
-  asyncHandler((req, res) => {
-    const split = splits.get(req.params.id);
+  asyncHandler(async (req, res) => {
+    const split = await splitRepository.findById(req.params.id);
     if (!split) {
       return res.status(404).json({ error: 'Split not found' });
     }
@@ -570,10 +566,25 @@ apiRouter.get(
 );
 
 // Health check endpoint for Docker and deployment platforms
-apiRouter.get('/health', (req, res) => {
-  res
-    .status(200)
-    .json({ status: 'healthy', timestamp: new Date().toISOString() });
+apiRouter.get('/health', async (req, res) => {
+  try {
+    const redisHealthy = await splitRepository.healthCheck();
+    const status = redisHealthy ? 'healthy' : 'degraded';
+
+    res.status(redisHealthy ? 200 : 503).json({
+      status,
+      timestamp: new Date().toISOString(),
+      services: {
+        redis: redisHealthy ? 'healthy' : 'unhealthy',
+      },
+    });
+  } catch {
+    res.status(503).json({
+      status: 'unhealthy',
+      timestamp: new Date().toISOString(),
+      error: 'Health check failed',
+    });
+  }
 });
 
 // Mount API router
@@ -601,16 +612,28 @@ if (isProduction()) {
   });
 }
 
-app.listen(config.port, () => {
+app.listen(config.port, async () => {
   const startupLogger = createContextualLogger({ component: 'startup' });
 
-  startupLogger.info('Server started successfully', {
-    port: config.port,
-    environment: config.nodeEnv,
-    url: `http://localhost:${config.port}`,
-    event: 'server_start',
-  });
+  try {
+    // Initialize Redis connection
+    await splitRepository.connect();
 
-  // Log system metrics on startup
-  logSystemMetrics();
+    startupLogger.info('Server started successfully', {
+      port: config.port,
+      environment: config.nodeEnv,
+      url: `http://localhost:${config.port}`,
+      redis: 'connected',
+      event: 'server_start',
+    });
+
+    // Log system metrics on startup
+    logSystemMetrics();
+  } catch (error) {
+    startupLogger.error('Failed to start server', {
+      error: error.message,
+      event: 'server_start_failed',
+    });
+    throw new Error('Failed to start server');
+  }
 });
