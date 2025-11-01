@@ -1,31 +1,40 @@
-version: '3.8'
-
 services:
   redis:
     image: redis:7-alpine
+    container_name: bill-splitter-redis
     ports:
       - '6379:6379'
     command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
     restart: unless-stopped
+    volumes:
+      - redis_data:/data
     healthcheck:
       test: ['CMD', 'redis-cli', 'ping']
       interval: 30s
       timeout: 3s
       retries: 3
       start_period: 5s
+    networks:
+      - bill-splitter-network
 
   bill-splitter:
-    build: .
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: bill-splitter-app
     ports:
       - '3001:3001'
     environment:
       - NODE_ENV=production
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - ALLOWED_ORIGIN=http://localhost:3001
     depends_on:
       redis:
         condition: service_healthy
     restart: unless-stopped
+    volumes:
+      - ./logs:/app/server/logs:rw
     healthcheck:
       test:
         [
@@ -37,4 +46,14 @@ services:
       interval: 30s
       timeout: 3s
       retries: 3
-      start_period: 5s
+      start_period: 10s
+    networks:
+      - bill-splitter-network
+
+volumes:
+  redis_data:
+    driver: local
+
+networks:
+  bill-splitter-network:
+    driver: bridge

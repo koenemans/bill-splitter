@@ -95,69 +95,14 @@ npm run lint             # Run linting
 npm run format           # Format code
 ```
 
-## 🐳 Docker Setup
+## 🐳 Docker Deployment
 
-Start the backend services with Docker Compose:
+For complete Docker deployment instructions, including production setup, PM2 configuration, monitoring, and cloud deployment guides, see **[DOCKER.md](./DOCKER.md)**.
 
+**Quick start:**
 ```bash
-# Start backend API and Redis
 docker-compose up -d
-
-# View logs
-docker-compose logs -f
-
-# Stop services
-docker-compose down
-```
-
-**Services:**
-- **Bill Splitter API**: http://localhost:3001
-- **Redis**: localhost:6379
-- **Health check**: http://localhost:3001/api/health
-
-The frontend connects to the Docker backend through Vite's proxy configuration.
-
-### Production Docker Setup
-
-```bash
-# Build the Docker image
-docker build -t bill-splitter .
-
-# Run the container (requires external Redis)
-docker run -p 3001:3001 \
-  -e REDIS_HOST=your-redis-host \
-  -e REDIS_PORT=6379 \
-  -e REDIS_PASSWORD=your-redis-password \
-  bill-splitter
-```
-
-### Docker Compose Production
-
-```yaml
-version: '3.8'
-services:
-  bill-splitter:
-    build: .
-    ports:
-      - '3001:3001'
-    environment:
-      - NODE_ENV=production
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-    depends_on:
-      - redis
-    restart: unless-stopped
-
-  redis:
-    image: redis:7-alpine
-    ports:
-      - '6379:6379'
-    volumes:
-      - redis_data:/data
-    restart: unless-stopped
-
-volumes:
-  redis_data:
+# Application available at http://localhost:3001
 ```
 
 ## ⚙️ Configuration
@@ -217,16 +162,7 @@ VITE_API_BASE_URL=https://your-api-domain.com/api
 
 **Note**: No environment variables needed for local development - the proxy handles all API routing automatically.
 
-### Cloud Deployment
-
-The application is designed to work with any cloud provider that supports Docker containers:
-
-- **Docker**: Use the included Dockerfile for container deployment
-- **Redis**: Requires external Redis service (AWS ElastiCache, Azure Redis, etc.)
-- **Startup command**: `npm start` (uses native Node.js process)
-- **Environment variables**: Configure Redis connection for your cloud provider
-
-**Process Management**: The application uses native Node.js processes. Most cloud platforms provide automatic restarts and process management.
+**🐳 For Docker and cloud deployment instructions, see [DOCKER.md](./DOCKER.md)**
 
 ## 🏛️ Architecture
 
