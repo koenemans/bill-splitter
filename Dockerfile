@@ -27,8 +27,14 @@ RUN npm install --only=production
 # Install PM2 globally for process management
 RUN npm install -g pm2
 
+# Copy ecosystem config for PM2
+COPY ecosystem.config.js ./
+
 # Copy built client files to server's static directory
 COPY --from=builder /app/client/dist ./public
+
+# Create logs directory
+RUN mkdir -p logs
 
 # Create non-root user for security
 RUN addgroup -g 1001 -S nodejs
@@ -45,5 +51,5 @@ EXPOSE 3001
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD node -e "require('http').get('http://localhost:3001/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })" || exit 1
 
-# Start the server
-CMD ["npm", "start"]
+# Start the server with PM2
+CMD ["pm2-runtime", "start", "ecosystem.config.js", "--env", "production"]
