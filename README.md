@@ -5,18 +5,23 @@ A lightweight full-stack application for splitting bills among groups. Built wit
 ## 🚀 Quick Start
 
 ```bash
-# Install all dependencies
+# Install dependencies
 npm run install:all
 
-# Start development servers (includes Redis)
-npm run dev
+# Start backend API and Redis with Docker
+docker-compose up -d
+
+# Start frontend separately
+cd client && npm run dev
 ```
 
 The app will run on:
 
-- **Frontend**: http://localhost:5173
-- **Backend API**: http://localhost:3001
-- **Redis**: localhost:6379 (started automatically with Docker Compose)
+- **Frontend**: http://localhost:5173 (Vite dev server)
+- **Backend API**: http://localhost:3001 (Docker container)
+- **Redis**: localhost:6379 (Docker container)
+
+**Development Setup**: Frontend uses Vite's proxy to forward `/api/*` requests to the Docker backend, eliminating CORS issues.
 
 ## 📋 Features
 
@@ -45,100 +50,72 @@ bill-splitter/
 ├── Dockerfile            # Docker container configuration
 ├── deploy.json           # Deployment configuration
 ├── web.config            # Windows App Service (optional)
+├── client/vite.config.js # Vite configuration with API proxy
 └── package.json          # Monorepo orchestrator
 ```
 
-## 🛠 Development Commands
+## 🛠 Development Setup
 
-### Root Commands (Monorepo)
+### Development Workflow
+
+The application uses Vite's proxy to connect the frontend to the Docker backend:
+
+**How it works:**
+- Frontend runs on `http://localhost:5173` (Vite dev server)
+- Backend runs on `http://localhost:3001` (Docker container)
+- Vite proxy forwards `/api/*` requests to the Docker backend
+- No CORS issues - browser only sees same-origin requests
+
+**API requests:**
+```javascript
+// These are automatically proxied by Vite
+fetch('/api/splits')           // → http://localhost:3001/api/splits
+fetch('/api/splits/123')       // → http://localhost:3001/api/splits/123
+```
+
+### Commands
 
 ```bash
-# Development
-npm run dev              # Start both client and server (includes Redis)
-npm run client:dev       # Start only the client
-npm run server:dev       # Start only the server
-
-# Building & Production
-npm run build            # Build client for production
-npm start                # Start server in production
-npm run server:start     # Start server in production
-npm run client:build     # Build only the client
-
-# Testing
-npm test                 # Run all tests (server + client)
-npm run test:coverage    # Run tests with coverage report
-
-# Code Quality
-npm run lint             # Run linting on both projects
-npm run lint:fix         # Fix linting issues automatically
-npm run format           # Format code with Prettier
-npm run format:check     # Check code formatting
-
 # Setup
-npm run install:all      # Install dependencies for all projects
-```
+npm run install:all      # Install all dependencies
 
-### Server Commands
+# Development (Docker + Vite)
+docker-compose up -d     # Start backend API and Redis
+cd client && npm run dev # Start frontend with Vite proxy
 
-```bash
-cd server
-
-# Development
-npm run dev              # Start server in development mode
-npm start                # Start server in production
+# Stop Docker services
+docker-compose down
 
 # Testing
-npm test                 # Run server tests
-npm run test:watch       # Run tests in watch mode
+npm test                 # Run all tests
 npm run test:coverage    # Run tests with coverage
 
 # Code Quality
-npm run lint             # Lint server code
-npm run lint:fix         # Fix linting issues
-npm run format           # Format server code
-npm run format:check     # Check server code formatting
+npm run lint             # Run linting
+npm run format           # Format code
 ```
 
-### Client Commands
+## 🐳 Docker Setup
+
+Start the backend services with Docker Compose:
 
 ```bash
-cd client
+# Start backend API and Redis
+docker-compose up -d
 
-# Development
-npm run dev              # Start Vite dev server
-npm run build            # Build for production
-npm run preview          # Preview production build
+# View logs
+docker-compose logs -f
 
-# Testing
-npm test                 # Run client tests
-npm run test:watch       # Run tests in watch mode
-npm run test:coverage    # Run tests with coverage
-
-# Code Quality
-npm run lint             # Lint client code
-npm run lint:fix         # Fix linting issues
-npm run format           # Format client code
-npm run format:check     # Check client code formatting
-```
-
-## 🐳 Docker Deployment
-
-### Development with Docker Compose (Recommended)
-
-```bash
-# Start the application with Redis
-docker-compose up
-
-# Stop the services
+# Stop services
 docker-compose down
 ```
 
-This includes:
+**Services:**
+- **Bill Splitter API**: http://localhost:3001
+- **Redis**: localhost:6379
+- **Health check**: http://localhost:3001/api/health
 
-- **Bill Splitter API** on port 3001
-- **Redis** on port 6379
-- Automatic networking between services
-- Environment configuration
+The frontend connects to the Docker backend through Vite's proxy configuration.
 
 ### Production Docker Setup
 
@@ -213,6 +190,32 @@ MAX_TOTAL_SPLITS=1000        # Maximum total active splits
 # Data Expiration
 SPLIT_EXPIRY_MS=86400000     # Split data TTL in milliseconds (24 hours)
 ```
+
+#### Client Configuration (Vite Proxy)
+
+The client uses Vite's proxy configuration for development:
+
+```javascript
+// client/vite.config.js
+export default defineConfig({
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3001',
+        changeOrigin: true
+      }
+    }
+  }
+})
+```
+
+**Environment Variables (Client):**
+```bash
+# For production deployment only
+VITE_API_BASE_URL=https://your-api-domain.com/api
+```
+
+**Note**: No environment variables needed for local development - the proxy handles all API routing automatically.
 
 ### Cloud Deployment
 

@@ -61,9 +61,13 @@ const apiRouter = express.Router();
 
 // Middleware setup following proper order: security, body parsers, custom middleware, routes, error handlers
 
-// Security: HTTPS redirect in production
+// Security: HTTPS redirect in production (but not for local development)
 if (isProduction()) {
   app.use((req, res, next) => {
+    // Skip HTTPS redirect for localhost development
+    if (req.headers.host?.includes('localhost')) {
+      return next();
+    }
     if (req.headers['x-forwarded-proto'] !== 'https') {
       return res.redirect(`https://${req.headers.host}${req.url}`);
     }
