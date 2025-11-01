@@ -65,6 +65,18 @@ The Bill Splitter Docker deployment includes production-ready features:
 - **Non-root user** for enhanced security
 - **Comprehensive logging** with structured output
 - **Zero-downtime deployment** with PM2 reload capabilities
+- **Automatic permissions handling** for log bind mounts
+
+### Permissions and Log Persistence
+
+The application handles Docker bind mount permissions automatically:
+
+- **Entrypoint Script**: `docker-entrypoint.sh` ensures logs directory has correct permissions
+- **Non-root User**: Application runs as UID 1001 for security
+- **Log Bind Mount**: `./logs:/app/server/logs:rw` persists logs to host
+- **Automatic Fix**: Container startup fixes ownership issues with bind mounts
+
+This prevents EACCES errors when PM2 tries to write log files in bind-mounted directories.
 
 ## PM2 Process Management
 

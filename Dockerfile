@@ -30,15 +30,19 @@ RUN npm install -g pm2
 # Copy ecosystem config for PM2
 COPY ecosystem.config.js ./
 
+# Copy entrypoint script
+COPY docker-entrypoint.sh ./
+RUN chmod +x docker-entrypoint.sh
+
 # Copy built client files to server's static directory
 COPY --from=builder /app/client/dist ./public
-
-# Create logs directory
-RUN mkdir -p logs
 
 # Create non-root user for security
 RUN addgroup -g 1001 -S nodejs
 RUN adduser -S nodejs -u 1001
+
+# Create logs directory with proper permissions
+RUN mkdir -p logs && chown -R nodejs:nodejs logs && chmod -R 755 logs
 
 # Change ownership of the app directory
 RUN chown -R nodejs:nodejs /app
@@ -51,5 +55,5 @@ EXPOSE 3001
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD node -e "require('http').get('http://localhost:3001/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })" || exit 1
 
-# Start the server with PM2
-CMD ["pm2-runtime", "start", "ecosystem.config.js", "--env", "production"]
+# Start the server with entrypoint script
+ENTRYPOINT ["./docker-entrypoint.sh"]
