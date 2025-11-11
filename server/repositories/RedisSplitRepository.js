@@ -73,11 +73,9 @@ export class RedisSplitRepository extends SplitRepository {
     const splitKey = this.keys.split(split.id);
     const pipeline = this.redis.pipeline();
 
-    // Store split metadata
-    pipeline.hset(splitKey, {
-      id: split.id,
-      createdAt: split.createdAt,
-    });
+    // Store split metadata using separate hset calls for ioredis-mock compatibility
+    pipeline.hset(splitKey, 'id', split.id);
+    pipeline.hset(splitKey, 'createdAt', split.createdAt);
 
     // Set expiration
     pipeline.expire(splitKey, this.ttlSeconds);
