@@ -49,7 +49,6 @@ bill-splitter/
 ├── docker-compose.yml    # Redis + application setup
 ├── Dockerfile            # Docker container configuration
 ├── deploy.json           # Deployment configuration
-├── web.config            # Windows App Service (optional)
 ├── client/vite.config.js # Vite configuration with API proxy
 └── package.json          # Monorepo orchestrator
 ```

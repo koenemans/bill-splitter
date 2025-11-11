@@ -14,17 +14,9 @@
       "port": 3001,
       "healthcheck": "/api/health",
       "buildCommand": "docker build -t bill-splitter .",
-      "runCommand": "docker run -p 3001:3001 bill-splitter"
+      "runCommand": "docker-compose up -d"
     },
-    "azure": {
-      "appServicePlan": "Standard",
-      "os": "linux",
-      "nodeVersion": "18-lts",
-      "buildCommand": "npm run build",
-      "startCommand": "npm start",
-      "processManager": "pm2",
-      "dockerSupport": true,
-      "features": ["auto-restart", "process-monitoring", "log-management"]
-    }
+    "processManager": "pm2",
+    "features": ["auto-restart", "process-monitoring", "log-management", "clustering"]
   }
 }

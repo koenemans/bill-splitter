@@ -437,20 +437,11 @@ docker-compose up -d --no-deps bill-splitter --scale bill-splitter=1
 
 ## Environment-Specific Configurations
 
-### Development
+Configure environment-specific settings using environment variables in `.env` files or by modifying the `docker-compose.yml` directly for different environments.
 
-```bash
-docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
-```
-
-### Staging
-
-```bash
-docker-compose -f docker-compose.yml -f docker-compose.staging.yml up
-```
-
-### Production
-
-```bash
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
-```
+For production deployments, ensure you:
+- Set `NODE_ENV=production`
+- Configure appropriate Redis connection settings
+- Set resource limits
+- Use HTTPS with a reverse proxy
+- Configure appropriate logging levels
