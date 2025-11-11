@@ -90,13 +90,13 @@ The application uses PM2 for production process management with the following be
 
 ### PM2 Configuration
 
-The `ecosystem.config.js` file contains the PM2 configuration:
+The `ecosystem.config.cjs` file contains the PM2 configuration (CommonJS format for PM2 compatibility):
 
 ```javascript
 {
   apps: [{
     name: 'bill-splitter',
-    script: 'server/index.js',
+    script: 'index.js',      // Relative to /app/server in Docker
     instances: 'max',        // Use all CPU cores
     exec_mode: 'cluster',    // Cluster mode for scaling
     max_memory_restart: '1G', // Restart on memory limit
@@ -255,6 +255,7 @@ curl http://localhost:3001/api/health
 2. **Redis Connection**: Verify Redis is running and accessible
 3. **Memory Issues**: Monitor memory usage and adjust limits if needed
 4. **Build Failures**: Check Node.js version compatibility (requires Node.js 18+)
+5. **PM2/Module System Errors**: The PM2 config file must use `.cjs` extension (`ecosystem.config.cjs`) with CommonJS format (`module.exports`) because PM2 itself uses `require()` to load config files, even though the server uses ES modules
 
 ### Debug Commands
 
@@ -294,7 +295,7 @@ The application is designed to work with any cloud provider that supports Docker
 
 - **Docker**: Use the included Dockerfile for container deployment
 - **Redis**: Requires external Redis service (AWS ElastiCache, Azure Redis, etc.)
-- **Startup command**: `pm2-runtime start ecosystem.config.js --env production`
+- **Startup command**: `pm2-runtime start ecosystem.config.cjs --env production`
 - **Environment variables**: Configure Redis connection for your cloud provider
 
 ### Process Management
@@ -437,20 +438,11 @@ docker-compose up -d --no-deps bill-splitter --scale bill-splitter=1
 
 ## Environment-Specific Configurations
 
-### Development
+Configure environment-specific settings using environment variables in `.env` files or by modifying the `docker-compose.yml` directly for different environments.
 
-```bash
-docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
-```
-
-### Staging
-
-```bash
-docker-compose -f docker-compose.yml -f docker-compose.staging.yml up
-```
-
-### Production
-
-```bash
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
-```
+For production deployments, ensure you:
+- Set `NODE_ENV=production`
+- Configure appropriate Redis connection settings
+- Set resource limits
+- Use HTTPS with a reverse proxy
+- Configure appropriate logging levels

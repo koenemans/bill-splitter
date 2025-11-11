@@ -28,7 +28,7 @@ RUN npm install --only=production
 RUN npm install -g pm2
 
 # Copy ecosystem config for PM2
-COPY ecosystem.config.js ./
+COPY ecosystem.config.cjs ./
 
 # Copy entrypoint script
 COPY docker-entrypoint.sh ./
