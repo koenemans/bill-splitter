@@ -1,7 +1,7 @@
 module.exports = {
   apps: [{
     name: 'bill-splitter',
-    script: 'server/index.js',
+    script: 'index.js',
     instances: 'max',
     exec_mode: 'cluster',
     env: {

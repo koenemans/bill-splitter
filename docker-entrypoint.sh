@@ -14,4 +14,4 @@ chown -R 1001:1001 /app/server/logs
 chmod -R 755 /app/server/logs
 
 # Start PM2 with the ecosystem config
-exec pm2-runtime start ecosystem.config.js --env production
+exec pm2-runtime start ecosystem.config.cjs --env production
