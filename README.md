@@ -8,20 +8,20 @@ A lightweight full-stack application for splitting bills among groups. Built wit
 # Install dependencies
 npm run install:all
 
-# Start backend API and Redis with Docker
-docker-compose up -d
+# Start Redis in Docker
+docker-compose up -d redis
 
-# Start frontend separately
-cd client && npm run dev
+# Start backend and frontend (with hot-reload)
+npm run dev
 ```
 
 The app will run on:
 
 - **Frontend**: http://localhost:5173 (Vite dev server)
-- **Backend API**: http://localhost:3001 (Docker container)
+- **Backend API**: http://localhost:3001 (Node.js with hot-reload)
 - **Redis**: localhost:6379 (Docker container)
 
-**Development Setup**: Frontend uses Vite's proxy to forward `/api/*` requests to the Docker backend, eliminating CORS issues.
+**Development Setup**: Frontend uses Vite's proxy to forward `/api/*` requests to the backend, eliminating CORS issues.
 
 ## 📋 Features
 
@@ -36,69 +36,12 @@ The app will run on:
 - **Repository pattern** for clean architecture
 - **Automatic cleanup** of expired splits
 
-## 🏗 Project Structure
-
-```
-bill-splitter/
-├── client/               # React frontend
-├── server/               # Express.js backend
-│   ├── repositories/     # Data access layer
-│   │   ├── SplitRepository.js     # Repository interface
-│   │   └── RedisSplitRepository.js # Redis implementation
-│   └── utils/            # Utilities (logger, anonymizer)
-├── docker-compose.yml    # Redis + application setup
-├── Dockerfile            # Docker container configuration
-├── deploy.json           # Deployment configuration
-├── client/vite.config.js # Vite configuration with API proxy
-└── package.json          # Monorepo orchestrator
-```
-
-## 🛠 Development Setup
-
-### Development Workflow
-
-The application uses Vite's proxy to connect the frontend to the Docker backend:
-
-**How it works:**
-- Frontend runs on `http://localhost:5173` (Vite dev server)
-- Backend runs on `http://localhost:3001` (Docker container)
-- Vite proxy forwards `/api/*` requests to the Docker backend
-- No CORS issues - browser only sees same-origin requests
-
-**API requests:**
-```javascript
-// These are automatically proxied by Vite
-fetch('/api/splits')           // → http://localhost:3001/api/splits
-fetch('/api/splits/123')       // → http://localhost:3001/api/splits/123
-```
-
-### Commands
-
-```bash
-# Setup
-npm run install:all      # Install all dependencies
-
-# Development (Docker + Vite)
-docker-compose up -d     # Start backend API and Redis
-cd client && npm run dev # Start frontend with Vite proxy
-
-# Stop Docker services
-docker-compose down
-
-# Testing
-npm test                 # Run all tests
-npm run test:coverage    # Run tests with coverage
-
-# Code Quality
-npm run lint             # Run linting
-npm run format           # Format code
-```
-
 ## 🐳 Docker Deployment
 
 For complete Docker deployment instructions, including production setup, PM2 configuration, monitoring, and cloud deployment guides, see **[DOCKER.md](./DOCKER.md)**.
 
 **Quick start:**
+
 ```bash
 docker-compose up -d
 # Application available at http://localhost:3001
@@ -146,14 +89,15 @@ export default defineConfig({
     proxy: {
       '/api': {
         target: 'http://localhost:3001',
-        changeOrigin: true
-      }
-    }
-  }
-})
+        changeOrigin: true,
+      },
+    },
+  },
+});
 ```
 
 **Environment Variables (Client):**
+
 ```bash
 # For production deployment only
 VITE_API_BASE_URL=https://your-api-domain.com/api
