@@ -8,9 +8,10 @@ export default {
     '**/*.js',
     '!**/node_modules/**',
     '!**/coverage/**',
-    '!jest.config.js',
+    '!**/*.config.js', // Exclude all config files
     '!**/*.test.js',
     '!**/__tests__/**',
+    '!index.js', // Main server file with app.listen() - tested via integration tests
   ],
   coverageThreshold: {
     global: {
