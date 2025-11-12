@@ -176,8 +176,8 @@ jobs:
         if: matrix.node-version == '18'
         uses: ArtiomTr/jest-coverage-report-action@v2
         with:
-          coverage-file: ./${{ matrix.component }}/coverage/coverage-summary.json
-          base-coverage-file: ./${{ matrix.component }}/coverage/coverage-summary.json
+          coverage-file: ./coverage/coverage-summary.json
+          base-coverage-file: ./coverage/coverage-summary.json
           test-script: npm run test:coverage
           working-directory: ./${{ matrix.component }}
           threshold: 80
