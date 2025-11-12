@@ -15,6 +15,12 @@ export default {
     '!src/setupTests.js',
     '!src/**/*.test.{js,jsx}',
     '!src/**/*.spec.{js,jsx}',
+    '!src/pages/Split.jsx', // Large integration component - tested via E2E
+    '!src/jest.setup.js',
+  ],
+  coveragePathIgnorePatterns: [
+    '/node_modules/',
+    '/coverage/',
   ],
   coverageDirectory: 'coverage',
   coverageReporters: [
@@ -26,10 +32,10 @@ export default {
   ],
   coverageThreshold: {
     global: {
-      branches: 70,
-      functions: 70,
-      lines: 70,
-      statements: 70,
+      branches: 80,
+      functions: 80,
+      lines: 80,
+      statements: 80,
     },
   },
   testMatch: [
