@@ -13,13 +13,7 @@ export default {
     '!**/__tests__/**',
     '!index.js', // Main server file with app.listen() - tested via integration tests
   ],
-  coverageReporters: [
-    'text',
-    'lcov',
-    'html',
-    'json-summary',
-    'cobertura',
-  ],
+  coverageReporters: ['text', 'lcov', 'html', 'json-summary', 'cobertura'],
   coverageThreshold: {
     global: {
       branches: 80,
