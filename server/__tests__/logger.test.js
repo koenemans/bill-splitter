@@ -7,11 +7,11 @@ import {
   test,
 } from '@jest/globals';
 import {
-  createContextualLogger,
   correlationMiddleware,
-  requestLoggingMiddleware,
+  createContextualLogger,
   errorLoggingMiddleware,
   logSystemMetrics,
+  requestLoggingMiddleware,
 } from '../utils/logger.js';
 
 describe('Logger Utilities', () => {

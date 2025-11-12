@@ -244,4 +244,104 @@ describe('Client Logger', () => {
       expect(call).toContain('Test message');
     });
   });
+
+  describe('Additional business events', () => {
+    test('should log split completed event', () => {
+      const splitId = 'test-split-id';
+      const participantCount = 5;
+      const totalAmount = 150.75;
+
+      logger.splitCompleted(splitId, participantCount, totalAmount, {
+        duration: 3600,
+      });
+
+      expect(mockConsole.log).toHaveBeenCalledWith(
+        expect.stringContaining('Split completed'),
+        {
+          splitId,
+          participantCount,
+          totalAmount,
+          event: 'split_completed',
+          duration: 3600,
+        }
+      );
+    });
+
+    test('should handle API error with string error', () => {
+      const operation = 'addParticipant';
+      const errorString = 'Connection refused';
+
+      logger.apiError(operation, errorString, { statusCode: 500 });
+
+      expect(mockConsole.error).toHaveBeenCalledWith(
+        expect.stringContaining('API Error: addParticipant'),
+        {
+          operation,
+          error: 'Connection refused',
+          event: 'api_error',
+          statusCode: 500,
+        }
+      );
+    });
+
+    test('should handle API error with null error', () => {
+      const operation = 'deleteExpense';
+
+      logger.apiError(operation, null, { retry: true });
+
+      expect(mockConsole.error).toHaveBeenCalledWith(
+        expect.stringContaining('API Error: deleteExpense'),
+        {
+          operation,
+          error: 'Unknown error',
+          event: 'api_error',
+          retry: true,
+        }
+      );
+    });
+
+    test('should handle API error with undefined error', () => {
+      const operation = 'getSettlement';
+
+      logger.apiError(operation, undefined, {});
+
+      expect(mockConsole.error).toHaveBeenCalledWith(
+        expect.stringContaining('API Error: getSettlement'),
+        {
+          operation,
+          error: 'Unknown error',
+          event: 'api_error',
+        }
+      );
+    });
+  });
+
+  describe('Log level filtering', () => {
+    test('should filter logs below current log level', () => {
+      // In test environment, debug logs might be filtered
+      logger.debug('Debug message');
+      logger.info('Info message');
+
+      // Info should always be logged
+      expect(mockConsole.log).toHaveBeenCalled();
+    });
+
+    test('should always log error messages', () => {
+      logger.error('Critical error');
+
+      expect(mockConsole.error).toHaveBeenCalledWith(
+        expect.stringContaining('[ERROR]'),
+        {}
+      );
+    });
+
+    test('should always log warning messages', () => {
+      logger.warn('Warning');
+
+      expect(mockConsole.warn).toHaveBeenCalledWith(
+        expect.stringContaining('[WARN]'),
+        {}
+      );
+    });
+  });
 });

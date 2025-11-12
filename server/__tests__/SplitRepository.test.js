@@ -102,7 +102,9 @@ describe('SplitRepository', () => {
 
     test('should accept correct parameters for addParticipant()', () => {
       const participant = { id: 'p1', name: 'John' };
-      expect(() => repository.addParticipant('split-id', participant)).toThrow();
+      expect(() =>
+        repository.addParticipant('split-id', participant)
+      ).toThrow();
     });
 
     test('should accept correct parameters for addExpense()', () => {
@@ -111,7 +113,9 @@ describe('SplitRepository', () => {
     });
 
     test('should accept correct parameters for deleteExpense()', () => {
-      expect(() => repository.deleteExpense('split-id', 'expense-id')).toThrow();
+      expect(() =>
+        repository.deleteExpense('split-id', 'expense-id')
+      ).toThrow();
     });
 
     test('should accept correct parameters for updateParticipantStatus()', () => {
