@@ -172,17 +172,16 @@ jobs:
             server/node_modules
           key: ${{ needs.setup.outputs.cache-key }}
 
-      - name: Run tests with coverage
+      - name: Run tests
+        if: matrix.node-version == '20'
         working-directory: ./${{ matrix.component }}
-        run: npm run test:coverage
+        run: npm test
 
       - name: Jest Coverage Report
         if: matrix.node-version == '18'
         uses: ArtiomTr/jest-coverage-report-action@v2
         with:
-          coverage-file: ./coverage/coverage-summary.json
-          base-coverage-file: ./coverage/coverage-summary.json
-          skip-step: install
+          test-script: npm run test:coverage
           working-directory: ./${{ matrix.component }}
           threshold: 80
           annotations: failed-tests
