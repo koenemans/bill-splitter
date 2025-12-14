@@ -1,9 +1,18 @@
+import { getLogger } from './requestLogger.js';
+import { logger as defaultLogger } from '../utils/logger.js';
+
 /**
  * Centralized error handler for Hono
  */
 export function errorHandler(err, c) {
-  // eslint-disable-next-line no-console -- console.error is the standard logging method in Cloudflare Workers
-  console.error('Unhandled error:', err);
+  // Use request-scoped logger if available, otherwise fall back to default
+  const log = getLogger(c) || defaultLogger;
+
+  log.error('Unhandled error', {
+    error: err,
+    errorType: err.name,
+    errorMessage: err.message,
+  });
 
   const isProduction = c.env?.ENVIRONMENT === 'production';
 
