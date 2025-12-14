@@ -49,3 +49,7 @@ pids
 # Deployment
 .vercel
 .netlify
+
+# Cloudflare
+.wrangler
+server/.wrangler
