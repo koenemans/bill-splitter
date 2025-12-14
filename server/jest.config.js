@@ -13,6 +13,7 @@ export default {
     '!src/**/*.test.js',
     '!src/index.js',
   ],
+  coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'html', 'json-summary', 'cobertura'],
   coverageThreshold: {
     global: {
@@ -22,4 +23,5 @@ export default {
       statements: 80,
     },
   },
+  verbose: true,
 };
