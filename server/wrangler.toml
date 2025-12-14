@@ -10,9 +10,9 @@ MAX_TOTAL_SPLITS = "10000"
 SPLIT_EXPIRY_HOURS = "24"
 
 [[d1_databases]]
-binding = "DB"
+binding = "bill_splitter_db"
 database_name = "bill-splitter-db"
-database_id = "3f6b5ac0-5ed2-4724-938d-528b3fbcf353"
+database_id = "046c8d44-f049-4a32-b9e4-3c28cee2391f"
 
 [dev]
 port = 3001
