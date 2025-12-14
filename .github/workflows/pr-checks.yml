@@ -125,12 +125,16 @@ jobs:
       - name: Check for console statements
         run: |
           component_path="${{ matrix.component }}"
-          if find "$component_path/src" -name "*.js" -o -name "*.jsx" -o -name "*.ts" -o -name "*.tsx" 2>/dev/null | xargs grep -l "console\.\(log\|debug\|info\|warn\)" 2>/dev/null; then
-            echo "❌ Console statements found in $component_path source code"
-            echo "Please remove console statements before merging"
+          # Exclude logger utilities that intentionally use console for Cloudflare Workers logging
+          exclude_pattern="logger\.js$"
+          matches=$(find "$component_path/src" \( -name "*.js" -o -name "*.jsx" -o -name "*.ts" -o -name "*.tsx" \) ! -path "*/__tests__/*" 2>/dev/null | grep -v "$exclude_pattern" | xargs grep -l "console\.\(log\|debug\|info\|warn\|error\)" 2>/dev/null || true)
+          if [ -n "$matches" ]; then
+            echo "❌ Console statements found in $component_path source code:"
+            echo "$matches"
+            echo "Please remove console statements before merging (logger utilities are excluded)"
             exit 1
           else
-            echo "✅ No console statements found in $component_path"
+            echo "✅ No console statements found in $component_path (excluding logger utilities)"
           fi
 
       - name: Run ESLint
