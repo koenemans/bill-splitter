@@ -3,15 +3,15 @@ export default {
   transform: {
     '^.+\\.js$': 'babel-jest',
   },
-  testMatch: ['<rootDir>/**/__tests__/**/*.js', '<rootDir>/**/*.test.js'],
+  testMatch: [
+    '<rootDir>/src/**/__tests__/**/*.js',
+    '<rootDir>/src/**/*.test.js',
+  ],
   collectCoverageFrom: [
-    '**/*.js',
-    '!**/node_modules/**',
-    '!**/coverage/**',
-    '!**/*.config.js', // Exclude all config files
-    '!**/*.test.js',
-    '!**/__tests__/**',
-    '!index.js', // Main server file with app.listen() - tested via integration tests
+    'src/**/*.js',
+    '!src/**/__tests__/**',
+    '!src/**/*.test.js',
+    '!src/index.js',
   ],
   coverageReporters: ['text', 'lcov', 'html', 'json-summary', 'cobertura'],
   coverageThreshold: {
