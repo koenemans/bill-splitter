@@ -2,7 +2,7 @@
 
 A lightweight full-stack application for splitting bills among groups. Built with React frontend and Cloudflare Workers backend in a monorepo structure.
 
-## 🚀 Quick Start
+## Quick Start
 
 ```bash
 # Install dependencies
@@ -19,7 +19,7 @@ The app will run on:
 
 **Development Setup**: Frontend uses Vite's proxy to forward `/api/*` requests to the backend, eliminating CORS issues.
 
-## 📋 Features
+## Features
 
 - Create a split with a shareable link
 - No account setup required
@@ -30,7 +30,7 @@ The app will run on:
 - Production-ready deployment configuration
 - **Repository pattern** for clean architecture
 
-## ☁️ Deployment
+## Deployment
 
 For deployment using Cloudflare Workers and D1 database, see **[CLOUDFLARE.md](./CLOUDFLARE.md)**.
 
@@ -40,7 +40,7 @@ This provides:
 - Zero infrastructure management
 - SQLite-compatible D1 database
 
-## ⚙️ Configuration
+## Configuration
 
 ### Environment Variables
 
@@ -82,9 +82,9 @@ VITE_API_BASE_URL=https://your-api-domain.com/api
 
 **Note**: No environment variables needed for local development - the proxy handles all API routing automatically.
 
-**📚 See [CLOUDFLARE.md](./CLOUDFLARE.md) for deployment instructions.**
+See [CLOUDFLARE.md](./CLOUDFLARE.md) for deployment instructions.
 
-## 🏛️ Architecture
+## Architecture
 
 ### Technology Stack
 
@@ -103,7 +103,7 @@ VITE_API_BASE_URL=https://your-api-domain.com/api
 - `participants` - Participants with foreign key to splits
 - `expenses` - Expenses with foreign keys to splits and participants
 
-## 🧪 Testing
+## Testing
 
 The application includes comprehensive test coverage:
 
@@ -119,6 +119,6 @@ npm test
 npm run test:coverage
 ```
 
-## 📄 License
+## License
 
 This project is open source and available under the [MIT License](LICENSE).
