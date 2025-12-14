@@ -1,13 +1,17 @@
 import { Hono } from 'hono';
 import { D1SplitRepository } from '../repositories/D1SplitRepository.js';
-import { validateExpense, validateParticipant, validateSplitId } from '../middleware/validation.js';
+import {
+  validateExpense,
+  validateParticipant,
+  validateSplitId,
+} from '../middleware/validation.js';
 import { sanitizeInput } from '../utils/sanitize.js';
 
 export function createSplitRoutes() {
   const router = new Hono();
 
   // Helper to get repository from context
-  const getRepository = (c) => {
+  const getRepository = c => {
     return new D1SplitRepository(c.env.DB, {
       maxParticipants: c.env.MAX_PARTICIPANTS,
       maxExpenses: c.env.MAX_EXPENSES,
@@ -17,7 +21,7 @@ export function createSplitRoutes() {
   };
 
   // Create a new split
-  router.post('/', async (c) => {
+  router.post('/', async c => {
     const repository = getRepository(c);
 
     // Check global split limit
@@ -38,7 +42,7 @@ export function createSplitRoutes() {
   });
 
   // Get split details
-  router.get('/:id', validateSplitId, async (c) => {
+  router.get('/:id', validateSplitId, async c => {
     const repository = getRepository(c);
     const split = await repository.findById(c.req.param('id'));
 
@@ -50,30 +54,35 @@ export function createSplitRoutes() {
   });
 
   // Add participant
-  router.post('/:id/participants', validateSplitId, validateParticipant, async (c) => {
-    const repository = getRepository(c);
-    const { name } = await c.req.json();
+  router.post(
+    '/:id/participants',
+    validateSplitId,
+    validateParticipant,
+    async c => {
+      const repository = getRepository(c);
+      const { name } = await c.req.json();
 
-    try {
-      const sanitizedName = sanitizeInput(name);
-      const participant = await repository.addParticipant(
-        c.req.param('id'),
-        sanitizedName
-      );
-      return c.json(participant, 201);
-    } catch (error) {
-      if (error.message === 'Split not found') {
-        return c.json({ error: 'Split not found' }, 404);
+      try {
+        const sanitizedName = sanitizeInput(name);
+        const participant = await repository.addParticipant(
+          c.req.param('id'),
+          sanitizedName
+        );
+        return c.json(participant, 201);
+      } catch (error) {
+        if (error.message === 'Split not found') {
+          return c.json({ error: 'Split not found' }, 404);
+        }
+        if (error.message.includes('Maximum')) {
+          return c.json({ error: error.message }, 400);
+        }
+        throw error;
       }
-      if (error.message.includes('Maximum')) {
-        return c.json({ error: error.message }, 400);
-      }
-      throw error;
     }
-  });
+  );
 
   // Add expense
-  router.post('/:id/expenses', validateSplitId, validateExpense, async (c) => {
+  router.post('/:id/expenses', validateSplitId, validateExpense, async c => {
     const repository = getRepository(c);
     const { participantId, description, amount } = await c.req.json();
 
@@ -101,7 +110,7 @@ export function createSplitRoutes() {
   });
 
   // Delete expense
-  router.delete('/:id/expenses/:expenseId', validateSplitId, async (c) => {
+  router.delete('/:id/expenses/:expenseId', validateSplitId, async c => {
     const repository = getRepository(c);
     const expenseId = c.req.param('expenseId');
 
@@ -124,61 +133,69 @@ export function createSplitRoutes() {
   });
 
   // Mark participant as done
-  router.patch('/:id/participants/:participantId/done', validateSplitId, async (c) => {
-    const repository = getRepository(c);
-    const participantId = c.req.param('participantId');
+  router.patch(
+    '/:id/participants/:participantId/done',
+    validateSplitId,
+    async c => {
+      const repository = getRepository(c);
+      const participantId = c.req.param('participantId');
 
-    if (!participantId || participantId.length !== 10) {
-      return c.json({ error: 'Invalid participant ID' }, 400);
-    }
+      if (!participantId || participantId.length !== 10) {
+        return c.json({ error: 'Invalid participant ID' }, 400);
+      }
 
-    try {
-      const participant = await repository.updateParticipantStatus(
-        c.req.param('id'),
-        participantId,
-        true
-      );
-      return c.json(participant);
-    } catch (error) {
-      if (error.message === 'Split not found') {
-        return c.json({ error: 'Split not found' }, 404);
+      try {
+        const participant = await repository.updateParticipantStatus(
+          c.req.param('id'),
+          participantId,
+          true
+        );
+        return c.json(participant);
+      } catch (error) {
+        if (error.message === 'Split not found') {
+          return c.json({ error: 'Split not found' }, 404);
+        }
+        if (error.message === 'Participant not found') {
+          return c.json({ error: 'Participant not found' }, 404);
+        }
+        throw error;
       }
-      if (error.message === 'Participant not found') {
-        return c.json({ error: 'Participant not found' }, 404);
-      }
-      throw error;
     }
-  });
+  );
 
   // Reset participant done status
-  router.patch('/:id/participants/:participantId/reset', validateSplitId, async (c) => {
-    const repository = getRepository(c);
-    const participantId = c.req.param('participantId');
+  router.patch(
+    '/:id/participants/:participantId/reset',
+    validateSplitId,
+    async c => {
+      const repository = getRepository(c);
+      const participantId = c.req.param('participantId');
 
-    if (!participantId || participantId.length !== 10) {
-      return c.json({ error: 'Invalid participant ID' }, 400);
-    }
+      if (!participantId || participantId.length !== 10) {
+        return c.json({ error: 'Invalid participant ID' }, 400);
+      }
 
-    try {
-      const participant = await repository.updateParticipantStatus(
-        c.req.param('id'),
-        participantId,
-        false
-      );
-      return c.json(participant);
-    } catch (error) {
-      if (error.message === 'Split not found') {
-        return c.json({ error: 'Split not found' }, 404);
+      try {
+        const participant = await repository.updateParticipantStatus(
+          c.req.param('id'),
+          participantId,
+          false
+        );
+        return c.json(participant);
+      } catch (error) {
+        if (error.message === 'Split not found') {
+          return c.json({ error: 'Split not found' }, 404);
+        }
+        if (error.message === 'Participant not found') {
+          return c.json({ error: 'Participant not found' }, 404);
+        }
+        throw error;
       }
-      if (error.message === 'Participant not found') {
-        return c.json({ error: 'Participant not found' }, 404);
-      }
-      throw error;
     }
-  });
+  );
 
   // Calculate settlement
-  router.get('/:id/settlement', validateSplitId, async (c) => {
+  router.get('/:id/settlement', validateSplitId, async c => {
     const repository = getRepository(c);
     const split = await repository.findById(c.req.param('id'));
 
@@ -188,8 +205,7 @@ export function createSplitRoutes() {
 
     // Check if all participants are done
     const allDone =
-      split.participants.length > 0 &&
-      split.participants.every((p) => p.isDone);
+      split.participants.length > 0 && split.participants.every(p => p.isDone);
 
     if (!allDone) {
       return c.json({
@@ -205,7 +221,7 @@ export function createSplitRoutes() {
 
     // Calculate what each person paid
     const balances = {};
-    split.participants.forEach((p) => {
+    split.participants.forEach(p => {
       balances[p.id] = {
         name: p.name,
         paid: 0,
@@ -213,7 +229,7 @@ export function createSplitRoutes() {
       };
     });
 
-    split.expenses.forEach((exp) => {
+    split.expenses.forEach(exp => {
       if (balances[exp.participantId]) {
         balances[exp.participantId].paid += exp.amount;
       }
@@ -229,7 +245,7 @@ export function createSplitRoutes() {
     }));
 
     // Save original balances before mutation
-    const originalBalances = netBalances.map((b) => ({
+    const originalBalances = netBalances.map(b => ({
       name: b.name,
       paid: Math.round(b.paid * 100) / 100,
       owes: Math.round(b.owes * 100) / 100,
@@ -238,10 +254,10 @@ export function createSplitRoutes() {
 
     // Calculate settlements (who pays whom)
     const debtors = netBalances
-      .filter((p) => p.balance < -0.01)
+      .filter(p => p.balance < -0.01)
       .sort((a, b) => a.balance - b.balance);
     const creditors = netBalances
-      .filter((p) => p.balance > 0.01)
+      .filter(p => p.balance > 0.01)
       .sort((a, b) => b.balance - a.balance);
 
     const transactions = [];

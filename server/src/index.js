@@ -14,7 +14,7 @@ app.use('*', secureHeaders());
 app.use(
   '*',
   cors({
-    origin: (origin) => {
+    origin: origin => {
       // Allow requests from any origin in development, or specific origins in production
       // You can customize this based on your ALLOWED_ORIGIN env var
       return origin;
@@ -30,7 +30,7 @@ app.use('/splits/*', rateLimiter);
 app.onError(errorHandler);
 
 // Health check endpoint
-app.get('/health', async (c) => {
+app.get('/health', async c => {
   try {
     const db = c.env.DB;
     await db.prepare('SELECT 1').first();
@@ -57,7 +57,7 @@ app.get('/health', async (c) => {
 app.route('/splits', createSplitRoutes());
 
 // 404 handler
-app.notFound((c) => {
+app.notFound(c => {
   return c.json({ error: 'Not found' }, 404);
 });
 

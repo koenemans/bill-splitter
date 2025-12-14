@@ -9,7 +9,7 @@ function createMockD1() {
     expenses: new Map(),
   };
 
-  const createStatement = (sql) => ({
+  const createStatement = sql => ({
     first: () => {
       // Handle queries without bind parameters
       if (sql.includes('COUNT(*)') && sql.includes('splits')) {
@@ -103,7 +103,10 @@ function createMockD1() {
           }
           return null;
         }
-        if (sql.includes('SELECT id, name, is_done') && sql.includes('participants')) {
+        if (
+          sql.includes('SELECT id, name, is_done') &&
+          sql.includes('participants')
+        ) {
           for (const p of data.participants.values()) {
             if (p.id === params[0] && p.split_id === params[1]) {
               return { id: p.id, name: p.name, isDone: p.is_done };
@@ -122,14 +125,18 @@ function createMockD1() {
         if (sql.includes('COUNT(*)') && sql.includes('participants')) {
           let count = 0;
           for (const p of data.participants.values()) {
-            if (p.split_id === params[0]) {count++;}
+            if (p.split_id === params[0]) {
+              count++;
+            }
           }
           return { count };
         }
         if (sql.includes('COUNT(*)') && sql.includes('expenses')) {
           let count = 0;
           for (const e of data.expenses.values()) {
-            if (e.split_id === params[0]) {count++;}
+            if (e.split_id === params[0]) {
+              count++;
+            }
           }
           return { count };
         }
@@ -139,7 +146,10 @@ function createMockD1() {
         return Promise.resolve(null);
       },
       all: () => {
-        if (sql.includes('SELECT id, name, is_done') && sql.includes('participants')) {
+        if (
+          sql.includes('SELECT id, name, is_done') &&
+          sql.includes('participants')
+        ) {
           const results = [];
           for (const p of data.participants.values()) {
             if (p.split_id === params[0]) {
@@ -148,7 +158,10 @@ function createMockD1() {
           }
           return Promise.resolve({ results });
         }
-        if (sql.includes('SELECT id, participant_id') && sql.includes('expenses')) {
+        if (
+          sql.includes('SELECT id, participant_id') &&
+          sql.includes('expenses')
+        ) {
           const results = [];
           for (const e of data.expenses.values()) {
             if (e.split_id === params[0]) {
@@ -168,7 +181,7 @@ function createMockD1() {
   });
 
   return {
-    prepare: (sql) => createStatement(sql),
+    prepare: sql => createStatement(sql),
     _data: data,
   };
 }

@@ -61,8 +61,14 @@ export async function rateLimiter(c, next) {
 
   // Add rate limit headers
   c.header('X-RateLimit-Limit', maxRequests.toString());
-  c.header('X-RateLimit-Remaining', Math.max(0, maxRequests - data.count).toString());
-  c.header('X-RateLimit-Reset', new Date(data.windowStart + WINDOW_MS).toISOString());
+  c.header(
+    'X-RateLimit-Remaining',
+    Math.max(0, maxRequests - data.count).toString()
+  );
+  c.header(
+    'X-RateLimit-Reset',
+    new Date(data.windowStart + WINDOW_MS).toISOString()
+  );
 
   await next();
 }

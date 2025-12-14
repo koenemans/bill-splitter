@@ -12,7 +12,7 @@ function createMockContext(overrides = {}) {
 
   return {
     req: {
-      param: jest.fn((name) => overrides.params?.[name]),
+      param: jest.fn(name => overrides.params?.[name]),
       json: jest.fn(() => Promise.resolve(overrides.body)),
     },
     json: jsonMock,

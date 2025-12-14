@@ -103,9 +103,12 @@ export const useSplitApi = () => {
 
   const deleteExpense = useCallback(
     async (splitId, expenseId) => {
-      return apiCall(`${API_BASE_URL}/splits/${splitId}/expenses/${expenseId}`, {
-        method: 'DELETE',
-      });
+      return apiCall(
+        `${API_BASE_URL}/splits/${splitId}/expenses/${expenseId}`,
+        {
+          method: 'DELETE',
+        }
+      );
     },
     [apiCall]
   );

@@ -60,7 +60,7 @@ export class D1SplitRepository {
     return {
       id: split.id,
       createdAt: split.createdAt,
-      participants: participants.results.map((p) => ({
+      participants: participants.results.map(p => ({
         ...p,
         isDone: Boolean(p.isDone),
       })),

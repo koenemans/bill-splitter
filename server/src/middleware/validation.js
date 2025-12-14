@@ -76,7 +76,9 @@ export async function validateExpense(c, next) {
     if (trimmedDesc.length === 0) {
       errors.push('Description is required');
     } else if (trimmedDesc.length > MAX_DESCRIPTION_LENGTH) {
-      errors.push(`Description must be under ${MAX_DESCRIPTION_LENGTH} characters`);
+      errors.push(
+        `Description must be under ${MAX_DESCRIPTION_LENGTH} characters`
+      );
     }
   }
 
