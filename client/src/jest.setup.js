@@ -5,6 +5,7 @@ Object.defineProperty(globalThis, 'import', {
       env: {
         DEV: false,
         MODE: 'test',
+        VITE_API_BASE_URL: undefined,
       },
     },
   },

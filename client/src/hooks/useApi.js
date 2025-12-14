@@ -1,5 +1,8 @@
 import { useCallback, useState } from 'react';
 
+// API base URL - uses environment variable in production, relative path in development
+const API_BASE_URL = import.meta.env?.VITE_API_BASE_URL || '/api';
+
 // Custom hook for API operations following React rules
 export const useApi = () => {
   const [loading, setLoading] = useState(false);
@@ -64,19 +67,19 @@ export const useSplitApi = () => {
   const { apiCall, loading, error, clearError } = useApi();
 
   const createSplit = useCallback(async () => {
-    return apiCall('/api/splits', { method: 'POST' });
+    return apiCall(`${API_BASE_URL}/splits`, { method: 'POST' });
   }, [apiCall]);
 
   const getSplit = useCallback(
     async id => {
-      return apiCall(`/api/splits/${id}`);
+      return apiCall(`${API_BASE_URL}/splits/${id}`);
     },
     [apiCall]
   );
 
   const addParticipant = useCallback(
     async (splitId, name) => {
-      return apiCall(`/api/splits/${splitId}/participants`, {
+      return apiCall(`${API_BASE_URL}/splits/${splitId}/participants`, {
         method: 'POST',
         body: JSON.stringify({ name }),
       });
@@ -86,7 +89,7 @@ export const useSplitApi = () => {
 
   const addExpense = useCallback(
     async (splitId, participantId, description, amount) => {
-      return apiCall(`/api/splits/${splitId}/expenses`, {
+      return apiCall(`${API_BASE_URL}/splits/${splitId}/expenses`, {
         method: 'POST',
         body: JSON.stringify({
           participantId,
@@ -100,9 +103,12 @@ export const useSplitApi = () => {
 
   const deleteExpense = useCallback(
     async (splitId, expenseId) => {
-      return apiCall(`/api/splits/${splitId}/expenses/${expenseId}`, {
-        method: 'DELETE',
-      });
+      return apiCall(
+        `${API_BASE_URL}/splits/${splitId}/expenses/${expenseId}`,
+        {
+          method: 'DELETE',
+        }
+      );
     },
     [apiCall]
   );
@@ -110,7 +116,7 @@ export const useSplitApi = () => {
   const markParticipantDone = useCallback(
     async (splitId, participantId) => {
       return apiCall(
-        `/api/splits/${splitId}/participants/${participantId}/done`,
+        `${API_BASE_URL}/splits/${splitId}/participants/${participantId}/done`,
         {
           method: 'PATCH',
         }
@@ -122,7 +128,7 @@ export const useSplitApi = () => {
   const resetParticipant = useCallback(
     async (splitId, participantId) => {
       return apiCall(
-        `/api/splits/${splitId}/participants/${participantId}/reset`,
+        `${API_BASE_URL}/splits/${splitId}/participants/${participantId}/reset`,
         {
           method: 'PATCH',
         }
@@ -133,7 +139,7 @@ export const useSplitApi = () => {
 
   const getSettlement = useCallback(
     async splitId => {
-      return apiCall(`/api/splits/${splitId}/settlement`);
+      return apiCall(`${API_BASE_URL}/splits/${splitId}/settlement`);
     },
     [apiCall]
   );
