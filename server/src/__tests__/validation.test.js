@@ -24,6 +24,16 @@ function createMockContext(overrides = {}) {
 
 describe('Validation Middleware', () => {
   describe('validateSplitId', () => {
+    test('should reject null split ID', async () => {
+      const c = createMockContext({ params: { id: null } });
+      const next = jest.fn();
+
+      const result = await validateSplitId(c, next);
+
+      expect(next).not.toHaveBeenCalled();
+      expect(result.data.error).toBe('Invalid split ID');
+    });
+
     test('should pass for valid 12-character split ID', async () => {
       const c = createMockContext({ params: { id: 'abc123def456' } });
       const next = jest.fn();
@@ -58,6 +68,28 @@ describe('Validation Middleware', () => {
   });
 
   describe('validateParticipant', () => {
+    test('should reject invalid JSON body', async () => {
+      const c = createMockContext({});
+      c.req.json = jest.fn(() => Promise.reject(new Error('Invalid JSON')));
+      const next = jest.fn();
+
+      const result = await validateParticipant(c, next);
+
+      expect(next).not.toHaveBeenCalled();
+      expect(result.data.error).toBe('Invalid JSON body');
+      expect(result.status).toBe(400);
+    });
+
+    test('should reject non-string name', async () => {
+      const c = createMockContext({ body: { name: 123 } });
+      const next = jest.fn();
+
+      const result = await validateParticipant(c, next);
+
+      expect(next).not.toHaveBeenCalled();
+      expect(result.data.details).toContain('Name is required');
+    });
+
     test('should pass for valid participant name', async () => {
       const c = createMockContext({ body: { name: 'John Doe' } });
       const next = jest.fn();
@@ -101,6 +133,82 @@ describe('Validation Middleware', () => {
   });
 
   describe('validateExpense', () => {
+    test('should reject invalid JSON body', async () => {
+      const c = createMockContext({});
+      c.req.json = jest.fn(() => Promise.reject(new Error('Invalid JSON')));
+      const next = jest.fn();
+
+      const result = await validateExpense(c, next);
+
+      expect(next).not.toHaveBeenCalled();
+      expect(result.data.error).toBe('Invalid JSON body');
+      expect(result.status).toBe(400);
+    });
+
+    test('should reject empty description', async () => {
+      const c = createMockContext({
+        body: {
+          participantId: 'abc1234567',
+          description: '   ',
+          amount: 25.5,
+        },
+      });
+      const next = jest.fn();
+
+      const result = await validateExpense(c, next);
+
+      expect(next).not.toHaveBeenCalled();
+      expect(result.data.details).toContain('Description is required');
+    });
+
+    test('should reject description exceeding max length', async () => {
+      const longDesc = 'a'.repeat(201);
+      const c = createMockContext({
+        body: {
+          participantId: 'abc1234567',
+          description: longDesc,
+          amount: 25.5,
+        },
+      });
+      const next = jest.fn();
+
+      const result = await validateExpense(c, next);
+
+      expect(next).not.toHaveBeenCalled();
+      expect(result.data.details[0]).toContain('under 200 characters');
+    });
+
+    test('should reject missing amount', async () => {
+      const c = createMockContext({
+        body: {
+          participantId: 'abc1234567',
+          description: 'Dinner',
+        },
+      });
+      const next = jest.fn();
+
+      const result = await validateExpense(c, next);
+
+      expect(next).not.toHaveBeenCalled();
+      expect(result.data.details).toContain('Amount is required');
+    });
+
+    test('should reject NaN amount', async () => {
+      const c = createMockContext({
+        body: {
+          participantId: 'abc1234567',
+          description: 'Dinner',
+          amount: 'not-a-number',
+        },
+      });
+      const next = jest.fn();
+
+      const result = await validateExpense(c, next);
+
+      expect(next).not.toHaveBeenCalled();
+      expect(result.data.details[0]).toContain('Amount must be between');
+    });
+
     test('should pass for valid expense', async () => {
       const c = createMockContext({
         body: {
