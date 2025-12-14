@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, jest } from '@jest/globals';
+import { beforeEach, describe, expect, jest, test } from '@jest/globals';
 import { rateLimiter } from '../middleware/rateLimiter.js';
 
 describe('rateLimiter', () => {
@@ -14,7 +14,9 @@ describe('rateLimiter', () => {
       req: {
         method: 'GET',
         header: jest.fn(name => {
-          if (name === 'cf-connecting-ip') return '192.168.1.1';
+          if (name === 'cf-connecting-ip') {
+            return '192.168.1.1';
+          }
           return null;
         }),
       },
@@ -25,8 +27,9 @@ describe('rateLimiter', () => {
     };
   });
 
-  async function mockNext() {
+  function mockNext() {
     nextCalled = true;
+    return Promise.resolve();
   }
 
   test('should allow requests within limit', async () => {
@@ -56,7 +59,9 @@ describe('rateLimiter', () => {
 
   test('should use cf-connecting-ip header for IP detection', async () => {
     mockContext.req.header = jest.fn(name => {
-      if (name === 'cf-connecting-ip') return '10.0.0.1';
+      if (name === 'cf-connecting-ip') {
+        return '10.0.0.1';
+      }
       return null;
     });
 
@@ -68,7 +73,9 @@ describe('rateLimiter', () => {
 
   test('should fallback to x-forwarded-for header', async () => {
     mockContext.req.header = jest.fn(name => {
-      if (name === 'x-forwarded-for') return '10.0.0.2, proxy1, proxy2';
+      if (name === 'x-forwarded-for') {
+        return '10.0.0.2, proxy1, proxy2';
+      }
       return null;
     });
 

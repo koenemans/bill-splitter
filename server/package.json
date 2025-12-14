@@ -11,10 +11,10 @@
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watch",
     "test:coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage",
-    "lint": "eslint src/ __tests__/ --ext .js",
-    "lint:fix": "eslint src/ __tests__/ --ext .js --fix",
-    "format": "prettier --write src/ __tests__/",
-    "format:check": "prettier --check src/ __tests__/"
+    "lint": "eslint src/ --ext .js",
+    "lint:fix": "eslint src/ --ext .js --fix",
+    "format": "prettier --write src/",
+    "format:check": "prettier --check src/"
   },
   "dependencies": {
     "hono": "^4.0.0",

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, jest } from '@jest/globals';
+import { beforeEach, describe, expect, jest, test } from '@jest/globals';
 import { Hono } from 'hono';
 import { createSplitRoutes } from '../routes/splits.js';
 
@@ -235,11 +235,7 @@ describe('Hono API Tests', () => {
 
   describe('POST /splits', () => {
     test('should create a new split', async () => {
-      const res = await app.request(
-        '/splits',
-        { method: 'POST' },
-        mockEnv
-      );
+      const res = await app.request('/splits', { method: 'POST' }, mockEnv);
       expect(res.status).toBe(201);
 
       const body = await res.json();
@@ -673,11 +669,7 @@ describe('Hono API Tests', () => {
 
       await app.request('/splits', { method: 'POST' }, limitedEnv);
 
-      const res = await app.request(
-        '/splits',
-        { method: 'POST' },
-        limitedEnv
-      );
+      const res = await app.request('/splits', { method: 'POST' }, limitedEnv);
       expect(res.status).toBe(429);
 
       const body = await res.json();
@@ -908,11 +900,7 @@ describe('Hono API Tests', () => {
         mockEnv
       );
 
-      const res = await app.request(
-        `/splits/${id}/settlement`,
-        {},
-        mockEnv
-      );
+      const res = await app.request(`/splits/${id}/settlement`, {}, mockEnv);
       expect(res.status).toBe(200);
 
       const body = await res.json();
