@@ -16,3 +16,10 @@ database_id = "046c8d44-f049-4a32-b9e4-3c28cee2391f"
 
 [dev]
 port = 3001
+
+[observability]
+[observability.logs]
+enabled = true
+head_sampling_rate = 1
+invocation_logs = true
+persist = true
