@@ -1,7 +1,10 @@
 import { Fragment, memo } from 'react';
 import PropTypes from 'prop-types';
+import { useTranslation } from 'react-i18next';
 
 const SettlementDisplay = memo(({ settlement }) => {
+  const { t } = useTranslation();
+
   if (!settlement) {
     return null;
   }
@@ -9,18 +12,22 @@ const SettlementDisplay = memo(({ settlement }) => {
   return (
     <div className='bg-white rounded-2xl shadow-xl p-4 sm:p-6 mb-4 sm:mb-6'>
       <h2 className='text-lg sm:text-2xl font-bold text-gray-900 mb-3 sm:mb-4'>
-        Settlement
+        {t('settlement.title')}
       </h2>
 
       <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-6'>
         <div className='bg-blue-50 rounded-lg p-3 sm:p-4'>
-          <div className='text-xs sm:text-sm text-gray-600'>Total Amount</div>
+          <div className='text-xs sm:text-sm text-gray-600'>
+            {t('settlement.totalAmount')}
+          </div>
           <div className='text-xl sm:text-2xl font-bold text-gray-900'>
             €{settlement.total.toFixed(2)}
           </div>
         </div>
         <div className='bg-indigo-50 rounded-lg p-3 sm:p-4'>
-          <div className='text-xs sm:text-sm text-gray-600'>Per Person</div>
+          <div className='text-xs sm:text-sm text-gray-600'>
+            {t('settlement.perPerson')}
+          </div>
           <div className='text-xl sm:text-2xl font-bold text-gray-900'>
             €{settlement.perPerson.toFixed(2)}
           </div>
@@ -28,7 +35,7 @@ const SettlementDisplay = memo(({ settlement }) => {
       </div>
 
       <h3 className='text-sm sm:text-base font-semibold text-gray-900 mb-2 sm:mb-3'>
-        Balances
+        {t('settlement.balances')}
       </h3>
       <div className='space-y-2 mb-4 sm:mb-6'>
         {settlement.balances.map((balance, idx) => (
@@ -41,8 +48,8 @@ const SettlementDisplay = memo(({ settlement }) => {
             </span>
             <div className='text-left sm:text-right'>
               <div className='text-xs sm:text-sm text-gray-600'>
-                Paid: €{balance.paid.toFixed(2)} | Owes: €
-                {balance.owes.toFixed(2)}
+                {t('settlement.paid', { amount: balance.paid.toFixed(2) })} |{' '}
+                {t('settlement.owes', { amount: balance.owes.toFixed(2) })}
               </div>
               <div
                 className={`font-semibold text-sm sm:text-base ${balance.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}
@@ -57,7 +64,7 @@ const SettlementDisplay = memo(({ settlement }) => {
       {settlement.transactions.length > 0 && (
         <Fragment>
           <h3 className='text-sm sm:text-base font-semibold text-gray-900 mb-2 sm:mb-3'>
-            Who Pays Whom
+            {t('settlement.whoPaysWhom')}
           </h3>
           <div className='space-y-2'>
             {settlement.transactions.map((tx, idx) => (

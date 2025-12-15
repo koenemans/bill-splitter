@@ -8,6 +8,7 @@ import {
   jest,
   test,
 } from '@jest/globals';
+import '../i18n';
 import App from '../App';
 
 // Mock fetch globally
