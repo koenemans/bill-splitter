@@ -1,5 +1,3 @@
-import { randomUUID } from 'node:crypto';
-
 /**
  * Structured logger for Cloudflare Workers
  * Outputs JSON logs that are captured by Cloudflare's logging system
@@ -143,7 +141,7 @@ export class Logger {
  */
 export function createRequestLogger(c) {
   const requestId =
-    c.req.header('cf-ray') || c.req.header('x-request-id') || randomUUID();
+    c.req.header('cf-ray') || c.req.header('x-request-id') || crypto.randomUUID();
 
   return new Logger({
     context: {
