@@ -177,12 +177,12 @@ jobs:
           key: ${{ needs.setup.outputs.cache-key }}
 
       - name: Run tests
-        if: matrix.node-version == '20'
+        if: matrix.node-version == '18'
         working-directory: ./${{ matrix.component }}
         run: npm test
 
       - name: Jest Coverage Report
-        if: matrix.node-version == '18'
+        if: matrix.node-version == '20'
         uses: ArtiomTr/jest-coverage-report-action@v2
         with:
           test-script: npm run test:coverage
