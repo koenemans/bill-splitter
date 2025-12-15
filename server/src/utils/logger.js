@@ -143,9 +143,7 @@ export class Logger {
  */
 export function createRequestLogger(c) {
   const requestId =
-    c.req.header('cf-ray') ||
-    c.req.header('x-request-id') ||
-    randomUUID();
+    c.req.header('cf-ray') || c.req.header('x-request-id') || randomUUID();
 
   return new Logger({
     context: {
