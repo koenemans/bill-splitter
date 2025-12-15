@@ -1,13 +1,29 @@
-import { describe, expect, test } from '@jest/globals';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  jest,
+  test,
+} from '@jest/globals';
 import { errorHandler } from '../middleware/errorHandler.js';
 
 describe('errorHandler', () => {
+  beforeEach(() => {
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   function createMockContext(env = {}) {
     let responseBody = null;
     let responseStatus = 200;
 
     return {
       env,
+      get: () => undefined, // No logger attached, will fallback to default
       json: (body, status = 200) => {
         responseBody = body;
         responseStatus = status;

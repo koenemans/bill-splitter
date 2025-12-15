@@ -4,8 +4,12 @@ import { secureHeaders } from 'hono/secure-headers';
 import { createSplitRoutes } from './routes/splits.js';
 import { rateLimiter } from './middleware/rateLimiter.js';
 import { errorHandler } from './middleware/errorHandler.js';
+import { requestLogger } from './middleware/requestLogger.js';
 
 const app = new Hono();
+
+// Request logging - logs to Cloudflare dashboard
+app.use('*', requestLogger);
 
 // Security headers
 app.use('*', secureHeaders());

@@ -164,9 +164,84 @@ wrangler d1 execute bill-splitter-db --command="SELECT name FROM sqlite_master W
 
 ### View Worker Logs
 
+**Via CLI:**
 ```bash
 wrangler tail
 ```
+
+**Via Cloudflare Dashboard:**
+1. Go to Workers & Pages → your worker → Logs
+2. Use filters to search by log level, request ID, or message content
+
+## Logging
+
+The application uses structured JSON logging that integrates with Cloudflare's logging system.
+
+### Log Format
+
+All logs are output as JSON and automatically captured by Cloudflare:
+
+```json
+{
+  "timestamp": "2024-01-15T10:30:00.000Z",
+  "level": "info",
+  "message": "Request completed",
+  "requestId": "abc123-cf-ray",
+  "method": "GET",
+  "path": "/splits/abc123",
+  "status": 200,
+  "durationMs": 45,
+  "cf": {
+    "colo": "AMS",
+    "country": "NL",
+    "city": "Amsterdam"
+  }
+}
+```
+
+### Log Levels
+
+| Level | Usage |
+|-------|-------|
+| `debug` | Detailed debugging information |
+| `info` | General operational events (requests, responses) |
+| `warn` | Client errors (4xx responses) |
+| `error` | Server errors (5xx responses, exceptions) |
+
+### What Gets Logged
+
+- **Request received**: URL, method, user agent, client IP
+- **Request completed**: Status code, response time
+- **Errors**: Full stack traces with error context
+
+### Using the Logger in Code
+
+```javascript
+import { getLogger } from './middleware/requestLogger.js';
+
+// In a route handler
+router.get('/example', async (c) => {
+  const log = getLogger(c);
+  
+  log.info('Processing request', { customField: 'value' });
+  log.warn('Something unusual', { details: '...' });
+  log.error('Something failed', { error: err });
+  
+  return c.json({ ok: true });
+});
+```
+
+### Viewing Logs
+
+**Real-time (CLI):**
+```bash
+wrangler tail --format=json
+```
+
+**Historical (Dashboard):**
+1. Go to [Cloudflare Dashboard](https://dash.cloudflare.com/)
+2. Navigate to Workers & Pages → bill-splitter-api → Logs
+3. Filter by log level, time range, or search log content
 
 ## Upgrading from Free Tier
 
