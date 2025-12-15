@@ -15,7 +15,8 @@
     "lint": "cd server && npm run lint && cd ../client && npm run lint",
     "lint:fix": "cd server && npm run lint:fix && cd ../client && npm run lint:fix",
     "format": "cd server && npm run format && cd ../client && npm run format",
-    "format:check": "cd server && npm run format:check && cd ../client && npm run format:check"
+    "format:check": "cd server && npm run format:check && cd ../client && npm run format:check",
+    "db:migrate": "cd server && npm run db:migrate"
   },
   "devDependencies": {
     "@size-limit/preset-app": "^11.1.4",
