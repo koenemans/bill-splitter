@@ -23,7 +23,7 @@ const Home = memo(() => {
   };
 
   return (
-    <div className='min-h-screen flex items-center justify-center p-4 sm:p-6'>
+    <div className='flex-1 flex items-center justify-center p-4 sm:p-6'>
       <div className='max-w-md w-full'>
         <div className='bg-white rounded-2xl shadow-xl p-6 sm:p-8 text-center'>
           <div className='mb-6'>

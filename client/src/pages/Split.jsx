@@ -208,7 +208,7 @@ const Split = memo(() => {
 
   if (loading) {
     return (
-      <div className='min-h-screen flex items-center justify-center'>
+      <div className='flex-1 flex items-center justify-center'>
         <div className='text-xl text-gray-600'>{t('split.loading')}</div>
       </div>
     );
@@ -216,14 +216,14 @@ const Split = memo(() => {
 
   if (!split) {
     return (
-      <div className='min-h-screen flex items-center justify-center'>
+      <div className='flex-1 flex items-center justify-center'>
         <div className='text-xl text-red-600'>{t('split.notFound')}</div>
       </div>
     );
   }
 
   return (
-    <div className='min-h-screen p-3 sm:p-4 py-6 sm:py-8'>
+    <div className='flex-1 p-3 sm:p-4 py-6 sm:py-8'>
       <div className='max-w-4xl mx-auto'>
         {/* Header */}
         <div className='bg-white rounded-2xl shadow-xl p-4 sm:p-6 mb-4 sm:mb-6'>

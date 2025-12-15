@@ -37,7 +37,8 @@ describe('LanguageSwitcher', () => {
   test('should display translated labels', () => {
     render(<LanguageSwitcher />);
 
-    expect(screen.getByText('Language:')).toBeInTheDocument();
+    // Label is hidden on mobile but still in DOM
+    expect(screen.getByLabelText('Language:')).toBeInTheDocument();
     expect(screen.getByText('English')).toBeInTheDocument();
     expect(screen.getByText('Nederlands')).toBeInTheDocument();
   });
