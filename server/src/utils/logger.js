@@ -143,7 +143,7 @@ export function createRequestLogger(c) {
   const requestId =
     c.req.header('cf-ray') ||
     c.req.header('x-request-id') ||
-    crypto.randomUUID();
+    globalThis.crypto.randomUUID();
 
   return new Logger({
     context: {
