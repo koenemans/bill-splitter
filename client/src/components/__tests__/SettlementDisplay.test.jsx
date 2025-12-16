@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, test } from '@jest/globals';
+import '../../i18n';
 import SettlementDisplay from '../SettlementDisplay';
 
 describe('SettlementDisplay Component', () => {

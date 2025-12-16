@@ -1,0 +1,62 @@
+{
+  "app": {
+    "title": "Rekening Delen",
+    "tagline": "Deel rekeningen eenvoudig met je vrienden. Geen registratie nodig."
+  },
+  "home": {
+    "step1Title": "Maak een split",
+    "step1Description": "Start een nieuwe deelsessie",
+    "step2Title": "Deel de link",
+    "step2Description": "Stuur het naar iedereen in je groep",
+    "step3Title": "Voeg uitgaven toe",
+    "step3Description": "Iedereen voegt zijn naam en wat hij betaald heeft toe",
+    "step4Title": "Bekijk de resultaten",
+    "step4Description": "Zie automatisch wie wat aan wie verschuldigd is",
+    "createButton": "Nieuwe Split Maken",
+    "creating": "Aanmaken..."
+  },
+  "split": {
+    "title": "Rekening Delen",
+    "copyLink": "Kopieer Link",
+    "linkCopied": "Link gekopieerd naar klembord!",
+    "participants": "Deelnemers",
+    "noParticipants": "Nog geen deelnemers",
+    "joinSplit": "Doe Mee",
+    "enterName": "Vul je naam in",
+    "join": "Deelnemen",
+    "expenses": "Uitgaven van {{name}}",
+    "total": "Totaal: €{{amount}}",
+    "description": "Omschrijving",
+    "addExpense": "Uitgave Toevoegen",
+    "doneButton": "Ik Ben Klaar Met Toevoegen",
+    "loading": "Laden...",
+    "notFound": "Split niet gevonden"
+  },
+  "participant": {
+    "done": "✓ Klaar",
+    "addingExpenses": "Voegt uitgaven toe...",
+    "reset": "Reset"
+  },
+  "settlement": {
+    "title": "Afrekening",
+    "totalAmount": "Totaalbedrag",
+    "perPerson": "Per Persoon",
+    "balances": "Balansen",
+    "paid": "Betaald: €{{amount}}",
+    "owes": "Verschuldigd: €{{amount}}",
+    "whoPaysWhom": "Wie Betaalt Wie"
+  },
+  "errors": {
+    "createSplit": "Kon split niet aanmaken. Probeer het opnieuw.",
+    "addParticipant": "Kon deelnemer niet toevoegen. Probeer het opnieuw.",
+    "addExpense": "Kon uitgave niet toevoegen. Probeer het opnieuw.",
+    "deleteExpense": "Kon uitgave niet verwijderen. Probeer het opnieuw.",
+    "markDone": "Kon niet als klaar markeren. Probeer het opnieuw.",
+    "resetParticipant": "Kon deelnemer niet resetten. Probeer het opnieuw."
+  },
+  "language": {
+    "label": "Taal",
+    "en": "English",
+    "nl": "Nederlands"
+  }
+}

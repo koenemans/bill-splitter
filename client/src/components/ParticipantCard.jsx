@@ -1,7 +1,10 @@
 import { memo } from 'react';
 import PropTypes from 'prop-types';
+import { useTranslation } from 'react-i18next';
 
 const ParticipantCard = memo(({ participant, onReset }) => {
+  const { t } = useTranslation();
+
   return (
     <div
       className={`p-3 sm:p-4 rounded-lg border-2 ${
@@ -14,14 +17,16 @@ const ParticipantCard = memo(({ participant, onReset }) => {
         {participant.name}
       </div>
       <div className='text-xs sm:text-sm text-gray-600 mt-1'>
-        {participant.isDone ? '✓ Done' : 'Adding expenses...'}
+        {participant.isDone
+          ? t('participant.done')
+          : t('participant.addingExpenses')}
       </div>
       {participant.isDone && (
         <button
           onClick={() => onReset(participant.id)}
           className='mt-2 w-full text-xs sm:text-sm px-2 py-1 sm:py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors touch-manipulation'
         >
-          Reset
+          {t('participant.reset')}
         </button>
       )}
     </div>

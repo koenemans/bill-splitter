@@ -2,6 +2,7 @@ import { Route, Routes, useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
 import Home from './pages/Home';
 import Split from './pages/Split';
+import Footer from './components/Footer';
 import { logger } from './utils/logger';
 
 function App() {
@@ -20,11 +21,14 @@ function App() {
   }, [location]);
 
   return (
-    <div className='min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100'>
-      <Routes>
-        <Route path='/' element={<Home />} />
-        <Route path='/split/:id' element={<Split />} />
-      </Routes>
+    <div className='min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col'>
+      <div className='flex-1'>
+        <Routes>
+          <Route path='/' element={<Home />} />
+          <Route path='/split/:id' element={<Split />} />
+        </Routes>
+      </div>
+      <Footer />
     </div>
   );
 }

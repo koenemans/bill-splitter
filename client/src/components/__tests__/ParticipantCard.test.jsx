@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, jest, test } from '@jest/globals';
+import '../../i18n';
 import ParticipantCard from '../ParticipantCard';
 
 describe('ParticipantCard Component', () => {

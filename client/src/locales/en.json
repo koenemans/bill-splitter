@@ -1,0 +1,62 @@
+{
+  "app": {
+    "title": "Bill Splitter",
+    "tagline": "Split bills easily with your friends. No signup required."
+  },
+  "home": {
+    "step1Title": "Create a split",
+    "step1Description": "Start a new bill split session",
+    "step2Title": "Share the link",
+    "step2Description": "Send it to everyone in your group",
+    "step3Title": "Add expenses",
+    "step3Description": "Everyone adds their name and what they paid",
+    "step4Title": "Get the results",
+    "step4Description": "See who owes whom automatically",
+    "createButton": "Create New Split",
+    "creating": "Creating..."
+  },
+  "split": {
+    "title": "Bill Split",
+    "copyLink": "Copy Link",
+    "linkCopied": "Link copied to clipboard!",
+    "participants": "Participants",
+    "noParticipants": "No participants yet",
+    "joinSplit": "Join the Split",
+    "enterName": "Enter your name",
+    "join": "Join",
+    "expenses": "{{name}}'s Expenses",
+    "total": "Total: €{{amount}}",
+    "description": "Description",
+    "addExpense": "Add Expense",
+    "doneButton": "I'm Done Adding Expenses",
+    "loading": "Loading...",
+    "notFound": "Split not found"
+  },
+  "participant": {
+    "done": "✓ Done",
+    "addingExpenses": "Adding expenses...",
+    "reset": "Reset"
+  },
+  "settlement": {
+    "title": "Settlement",
+    "totalAmount": "Total Amount",
+    "perPerson": "Per Person",
+    "balances": "Balances",
+    "paid": "Paid: €{{amount}}",
+    "owes": "Owes: €{{amount}}",
+    "whoPaysWhom": "Who Pays Whom"
+  },
+  "errors": {
+    "createSplit": "Failed to create split. Please try again.",
+    "addParticipant": "Failed to add participant. Please try again.",
+    "addExpense": "Failed to add expense. Please try again.",
+    "deleteExpense": "Failed to delete expense. Please try again.",
+    "markDone": "Failed to mark as done. Please try again.",
+    "resetParticipant": "Failed to reset participant. Please try again."
+  },
+  "language": {
+    "label": "Language",
+    "en": "English",
+    "nl": "Nederlands"
+  }
+}

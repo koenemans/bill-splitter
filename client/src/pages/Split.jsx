@@ -1,5 +1,6 @@
 import { memo, useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useSplit } from '../hooks/useSplit';
 import { useSplitApi } from '../hooks/useApi';
 import { logger } from '../utils/logger';
@@ -13,6 +14,7 @@ import ParticipantCard from '../components/ParticipantCard';
 import ExpenseItem from '../components/ExpenseItem';
 
 const Split = memo(() => {
+  const { t } = useTranslation();
   const { id } = useParams();
   const { split, settlement, loading, refreshSplit } = useSplit(id);
   const {
@@ -66,10 +68,10 @@ const Split = memo(() => {
           splitId: id,
           participantName: anonymizeParticipantName(name),
         });
-        alert(err.message || 'Failed to add participant. Please try again.');
+        alert(err.message || t('errors.addParticipant'));
       }
     },
-    [id, name, addParticipant, saveParticipant, refreshSplit]
+    [id, name, addParticipant, saveParticipant, refreshSplit, t]
   );
 
   const handleAddExpense = useCallback(
@@ -101,10 +103,10 @@ const Split = memo(() => {
           amount,
           description: anonymizeExpenseDescription(description),
         });
-        alert(err.message || 'Failed to add expense. Please try again.');
+        alert(err.message || t('errors.addExpense'));
       }
     },
-    [id, currentParticipant, description, amount, addExpense, refreshSplit]
+    [id, currentParticipant, description, amount, addExpense, refreshSplit, t]
   );
 
   const handleDeleteExpense = useCallback(
@@ -123,10 +125,10 @@ const Split = memo(() => {
         refreshSplit();
       } catch (err) {
         logger.apiError('delete_expense', err, { splitId: id, expenseId });
-        alert('Failed to delete expense. Please try again.');
+        alert(t('errors.deleteExpense'));
       }
     },
-    [id, deleteExpense, refreshSplit]
+    [id, deleteExpense, refreshSplit, t]
   );
 
   const handleMarkDone = useCallback(async () => {
@@ -154,7 +156,7 @@ const Split = memo(() => {
         splitId: id,
         participantId: currentParticipant.id,
       });
-      alert('Failed to mark as done. Please try again.');
+      alert(t('errors.markDone'));
     }
   }, [
     id,
@@ -162,6 +164,7 @@ const Split = memo(() => {
     markParticipantDone,
     clearParticipant,
     refreshSplit,
+    t,
   ]);
 
   const handleResetParticipant = useCallback(
@@ -185,18 +188,18 @@ const Split = memo(() => {
           splitId: id,
           participantId,
         });
-        alert('Failed to reset participant. Please try again.');
+        alert(t('errors.resetParticipant'));
       }
     },
-    [id, resetParticipant, saveParticipant, refreshSplit]
+    [id, resetParticipant, saveParticipant, refreshSplit, t]
   );
 
   // Utility functions
   const copyLink = useCallback(() => {
     logger.userAction('copy_link', 'button_click', { splitId: id });
     navigator.clipboard.writeText(shareUrl);
-    alert('Link copied to clipboard!');
-  }, [shareUrl, id]);
+    alert(t('split.linkCopied'));
+  }, [shareUrl, id, t]);
 
   const myExpenses =
     split?.expenses.filter(e => e.participantId === currentParticipant?.id) ||
@@ -205,27 +208,27 @@ const Split = memo(() => {
 
   if (loading) {
     return (
-      <div className='min-h-screen flex items-center justify-center'>
-        <div className='text-xl text-gray-600'>Loading...</div>
+      <div className='flex-1 flex items-center justify-center'>
+        <div className='text-xl text-gray-600'>{t('split.loading')}</div>
       </div>
     );
   }
 
   if (!split) {
     return (
-      <div className='min-h-screen flex items-center justify-center'>
-        <div className='text-xl text-red-600'>Split not found</div>
+      <div className='flex-1 flex items-center justify-center'>
+        <div className='text-xl text-red-600'>{t('split.notFound')}</div>
       </div>
     );
   }
 
   return (
-    <div className='min-h-screen p-3 sm:p-4 py-6 sm:py-8'>
+    <div className='flex-1 p-3 sm:p-4 py-6 sm:py-8'>
       <div className='max-w-4xl mx-auto'>
         {/* Header */}
         <div className='bg-white rounded-2xl shadow-xl p-4 sm:p-6 mb-4 sm:mb-6'>
           <h1 className='text-xl sm:text-2xl font-bold text-gray-900 mb-3 sm:mb-4'>
-            Bill Split
+            {t('split.title')}
           </h1>
 
           <div className='flex flex-col sm:flex-row gap-2 sm:gap-3'>
@@ -239,7 +242,7 @@ const Split = memo(() => {
               onClick={copyLink}
               className='px-4 sm:px-6 py-2 sm:py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium touch-manipulation whitespace-nowrap'
             >
-              Copy Link
+              {t('split.copyLink')}
             </button>
           </div>
         </div>
@@ -250,12 +253,12 @@ const Split = memo(() => {
         {/* Participants */}
         <div className='bg-white rounded-2xl shadow-xl p-4 sm:p-6 mb-4 sm:mb-6'>
           <h2 className='text-lg sm:text-xl font-bold text-gray-900 mb-3 sm:mb-4'>
-            Participants
+            {t('split.participants')}
           </h2>
 
           {split.participants.length === 0 ? (
             <p className='text-gray-500 text-center py-4 text-sm sm:text-base'>
-              No participants yet
+              {t('split.noParticipants')}
             </p>
           ) : (
             <div className='grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-3'>
@@ -274,7 +277,7 @@ const Split = memo(() => {
         {!currentParticipant ? (
           <div className='bg-white rounded-2xl shadow-xl p-4 sm:p-6'>
             <h2 className='text-lg sm:text-xl font-bold text-gray-900 mb-3 sm:mb-4'>
-              Join the Split
+              {t('split.joinSplit')}
             </h2>
             <form
               onSubmit={handleAddParticipant}
@@ -284,7 +287,7 @@ const Split = memo(() => {
                 type='text'
                 value={name}
                 onChange={e => setName(e.target.value)}
-                placeholder='Enter your name'
+                placeholder={t('split.enterName')}
                 className='flex-1 px-3 sm:px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base'
                 required
               />
@@ -292,7 +295,7 @@ const Split = memo(() => {
                 type='submit'
                 className='px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all text-sm sm:text-base touch-manipulation whitespace-nowrap'
               >
-                Join
+                {t('split.join')}
               </button>
             </form>
           </div>
@@ -300,10 +303,10 @@ const Split = memo(() => {
           <div className='bg-white rounded-2xl shadow-xl p-4 sm:p-6'>
             <div className='flex flex-col sm:flex-row sm:justify-between sm:items-center mb-3 sm:mb-4 gap-2'>
               <h2 className='text-lg sm:text-xl font-bold text-gray-900'>
-                {currentParticipant.name}'s Expenses
+                {t('split.expenses', { name: currentParticipant.name })}
               </h2>
               <div className='text-base sm:text-lg font-semibold text-indigo-600'>
-                Total: €{myTotal.toFixed(2)}
+                {t('split.total', { amount: myTotal.toFixed(2) })}
               </div>
             </div>
 
@@ -327,7 +330,7 @@ const Split = memo(() => {
                   type='text'
                   value={description}
                   onChange={e => setDescription(e.target.value)}
-                  placeholder='Description'
+                  placeholder={t('split.description')}
                   className='sm:col-span-2 px-3 sm:px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base'
                   required
                 />
@@ -350,7 +353,7 @@ const Split = memo(() => {
                 type='submit'
                 className='w-full mt-3 px-6 py-3 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600 transition-colors text-sm sm:text-base touch-manipulation'
               >
-                Add Expense
+                {t('split.addExpense')}
               </button>
             </form>
 
@@ -359,7 +362,7 @@ const Split = memo(() => {
               onClick={handleMarkDone}
               className='w-full px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold rounded-lg hover:from-green-600 hover:to-emerald-700 transition-all shadow-lg text-sm sm:text-base touch-manipulation'
             >
-              I'm Done Adding Expenses
+              {t('split.doneButton')}
             </button>
           </div>
         )}

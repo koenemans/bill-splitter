@@ -1,9 +1,11 @@
 import { memo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useSplitApi } from '../hooks/useApi';
 import { logger } from '../utils/logger';
 
 const Home = memo(() => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { createSplit, loading, clearError } = useSplitApi();
 
@@ -16,12 +18,12 @@ const Home = memo(() => {
       navigate(`/split/${data.id}`);
     } catch (err) {
       logger.apiError('create_split', err);
-      alert(err.message || 'Failed to create split. Please try again.');
+      alert(err.message || t('errors.createSplit'));
     }
   };
 
   return (
-    <div className='min-h-screen flex items-center justify-center p-4 sm:p-6'>
+    <div className='flex-1 flex items-center justify-center p-4 sm:p-6'>
       <div className='max-w-md w-full'>
         <div className='bg-white rounded-2xl shadow-xl p-6 sm:p-8 text-center'>
           <div className='mb-6'>
@@ -41,10 +43,10 @@ const Home = memo(() => {
               </svg>
             </div>
             <h1 className='text-2xl sm:text-3xl font-bold text-gray-900 mb-2'>
-              Bill Splitter
+              {t('app.title')}
             </h1>
             <p className='text-sm sm:text-base text-gray-600'>
-              Split bills easily with your friends. No signup required.
+              {t('app.tagline')}
             </p>
           </div>
 
@@ -55,10 +57,10 @@ const Home = memo(() => {
               </div>
               <div>
                 <h3 className='font-semibold text-gray-900 text-sm sm:text-base'>
-                  Create a split
+                  {t('home.step1Title')}
                 </h3>
                 <p className='text-xs sm:text-sm text-gray-600'>
-                  Start a new bill split session
+                  {t('home.step1Description')}
                 </p>
               </div>
             </div>
@@ -68,10 +70,10 @@ const Home = memo(() => {
               </div>
               <div>
                 <h3 className='font-semibold text-gray-900 text-sm sm:text-base'>
-                  Share the link
+                  {t('home.step2Title')}
                 </h3>
                 <p className='text-xs sm:text-sm text-gray-600'>
-                  Send it to everyone in your group
+                  {t('home.step2Description')}
                 </p>
               </div>
             </div>
@@ -81,10 +83,10 @@ const Home = memo(() => {
               </div>
               <div>
                 <h3 className='font-semibold text-gray-900 text-sm sm:text-base'>
-                  Add expenses
+                  {t('home.step3Title')}
                 </h3>
                 <p className='text-xs sm:text-sm text-gray-600'>
-                  Everyone adds their name and what they paid
+                  {t('home.step3Description')}
                 </p>
               </div>
             </div>
@@ -94,10 +96,10 @@ const Home = memo(() => {
               </div>
               <div>
                 <h3 className='font-semibold text-gray-900 text-sm sm:text-base'>
-                  Get the results
+                  {t('home.step4Title')}
                 </h3>
                 <p className='text-xs sm:text-sm text-gray-600'>
-                  See who owes whom automatically
+                  {t('home.step4Description')}
                 </p>
               </div>
             </div>
@@ -108,7 +110,7 @@ const Home = memo(() => {
             disabled={loading}
             className='w-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold py-3 sm:py-4 px-6 rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base touch-manipulation'
           >
-            {loading ? 'Creating...' : 'Create New Split'}
+            {loading ? t('home.creating') : t('home.createButton')}
           </button>
         </div>
       </div>
