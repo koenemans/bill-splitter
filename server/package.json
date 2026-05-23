@@ -17,7 +17,7 @@
     "format:check": "prettier --check src/"
   },
   "dependencies": {
-    "hono": "^4.0.0",
+    "hono": "^4.12.18",
     "nanoid": "^5.0.4"
   },
   "devDependencies": {
@@ -32,6 +32,6 @@
     "jest": "^30.2.0",
     "miniflare": "^3.20240129.0",
     "prettier": "^3.6.2",
-    "wrangler": "^4.54.0"
+    "wrangler": "^4.59.1"
   }
 }
