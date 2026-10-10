@@ -1,0 +1,12 @@
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/client"
+    schedule:
+      interval: "weekly"
+    # Security updates only; this entry exists to apply the ignore rule below
+    open-pull-requests-limit: 0
+    ignore:
+      # Tailwind v4 needs a migration (@tailwindcss/postcss, new CSS entry point)
+      - dependency-name: "tailwindcss"
+        update-types: ["version-update:semver-major"]
