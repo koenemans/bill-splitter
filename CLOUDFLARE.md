@@ -13,7 +13,7 @@ This guide explains how to deploy the Bill Splitter application to Cloudflare's 
 ## Prerequisites
 
 1. [Cloudflare account](https://dash.cloudflare.com/sign-up) (free)
-2. [Node.js](https://nodejs.org/) v18+
+2. [Node.js](https://nodejs.org/) v20.19+
 3. [Wrangler CLI](https://developers.cloudflare.com/workers/wrangler/install-and-update/)
 
 ```bash
