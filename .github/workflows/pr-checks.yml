@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 env:
-  NODE_VERSION: '18'
+  NODE_VERSION: '22'
   CACHE_DEPENDENCY_PATH: |
     package-lock.json
     client/package-lock.json
@@ -157,7 +157,7 @@ jobs:
     strategy:
       matrix:
         component: [client, server]
-        node-version: ['18', '20']
+        node-version: ['20', '22']
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -177,12 +177,12 @@ jobs:
           key: ${{ needs.setup.outputs.cache-key }}
 
       - name: Run tests
-        if: matrix.node-version == '18'
+        if: matrix.node-version == '20'
         working-directory: ./${{ matrix.component }}
         run: npm test
 
       - name: Jest Coverage Report
-        if: matrix.node-version == '20'
+        if: matrix.node-version == '22'
         uses: ArtiomTr/jest-coverage-report-action@v2
         with:
           test-script: npm run test:coverage
