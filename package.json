@@ -19,8 +19,7 @@
     "db:migrate": "cd server && npm run db:migrate"
   },
   "devDependencies": {
-    "@size-limit/preset-app": "^11.1.4",
-    "@size-limit/webpack": "^11.1.4",
+    "@size-limit/file": "^11.2.0",
     "concurrently": "^8.2.2",
     "eslint": "^9.38.0",
     "prettier": "^3.6.2",

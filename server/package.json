@@ -23,7 +23,7 @@
   "devDependencies": {
     "@babel/core": "^7.23.0",
     "@babel/preset-env": "^7.23.0",
-    "@cloudflare/workers-types": "^4.20240117.0",
+    "@cloudflare/workers-types": "^5.20261010.1",
     "@eslint/js": "^9.38.0",
     "@jest/globals": "^30.2.0",
     "babel-jest": "^30.2.0",
